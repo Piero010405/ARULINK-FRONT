@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import ChatPanel from "../components/ui/chat-panel";
+import ChatPanel from "../components/chat-panel";
+import '@testing-library/jest-dom';
 
 test("ChatPanel permite enviar mensaje", async () => {
   render(<ChatPanel />);

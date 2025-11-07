@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import Dashboard from "../components/ui/dashboard";
+import Dashboard from "../components/dashboard";
+import '@testing-library/jest-dom';
 
 test("Dashboard muestra título y tarjetas", () => {
   render(<Dashboard />);

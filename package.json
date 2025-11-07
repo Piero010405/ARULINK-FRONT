@@ -6,14 +6,18 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "test": "jest --watchAll"
   },
   "jest": {
     "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
     "moduleNameMapper": {
-      "\\.(css|less|scss)$": "identity-obj-proxy"
-    },
-    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"]
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+      "^@/(.*)$": "<rootDir>/$1"
+    }
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -55,9 +59,9 @@
     "lucide-react": "^0.454.0",
     "next": "16.0.0",
     "next-themes": "^0.4.6",
-    "react": "^18.0.0",
+    "react": "^18.2.0",
     "react-day-picker": "9.8.0",
-    "react-dom": "^18.0.0",
+    "react-dom": "^18.2.0",
     "react-hook-form": "^7.60.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "latest",
@@ -72,6 +76,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
