@@ -8,15 +8,12 @@ export default function Dashboard() {
   return (
     <div className="flex h-screen bg-white">
       {/* Left Sidebar with Indigenous Pattern */}
-      <div className="w-2 bg-gradient-to-b from-red-700 via-red-600 to-red-700">
-        <IndigenousPattern />
-      </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-center">
-          <h1 className="text-4xl font-serif font-light text-gray-900">Intranet</h1>
+          <h1 className="text-4xl font-serif font-light text-gray-900">AruLink</h1>
         </header>
 
         <div className="flex-1 overflow-auto flex">

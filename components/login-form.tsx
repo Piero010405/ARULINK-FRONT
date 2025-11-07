@@ -19,16 +19,14 @@ export default function LoginForm({ onLoginSuccess }: { onLoginSuccess: () => vo
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="w-full max-w-md">
         {/* Logo Space */}
-        <div className="mb-8 flex justify-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-red-700 to-red-900 rounded-lg flex items-center justify-center text-white font-serif text-xl font-bold">
-            Aru
-          </div>
+        <div className="mb-8 flex justify-center mt-5">
+          <img src="/logo.png" alt="AruLink Logo" className="h-16 w-auto" />
         </div>
 
         {/* Login Box */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-8">
-          <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2 text-center">Intranet</h1>
-          <p className="text-center text-gray-600 mb-8 font-light">Aru Link - Manage</p>
+          <h1 className="text-3xl font-serif font-bold text-gray-900 mb-6 text-left">Ingresar</h1>
+          {/* <p className="text-center text-gray-600 mb-8 font-light">Aru Link - Manage</p> */}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email/Username Field */}
