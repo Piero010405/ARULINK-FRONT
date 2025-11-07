@@ -117,6 +117,7 @@ export default function ChatPanel() {
             className="flex-1 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-red-700 text-sm text-gray-900 placeholder-gray-400"
           />
           <button
+            data-testid="send-button"
             onClick={handleSendMessage}
             className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md transition-colors font-medium text-sm"
           >

@@ -1,6 +1,5 @@
 import { render, screen } from "@testing-library/react";
 import StatCard from "../components/stat-card";
-import '@testing-library/jest-dom';
 
 test("StatCard muestra label, valor y icono", () => {
   render(<StatCard label="Casos totales" value="248" icon="📋" />);
