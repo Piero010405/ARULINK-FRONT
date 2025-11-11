@@ -1,13 +1,15 @@
 "use client"
 
 import React, { useState } from "react"
+import { useRouter } from "next/navigation"
 
-export default function LoginForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
+export default function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [emailError, setEmailError] = useState("")
   const [passwordError, setPasswordError] = useState("")
   const [generalError, setGeneralError] = useState("")
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,7 +38,7 @@ export default function LoginForm({ onLoginSuccess }: { onLoginSuccess: () => vo
       }
 
       localStorage.setItem("token", data.token)
-      onLoginSuccess()
+      router.push("/menu-principal") // ✅ Redirige a la vista principal
     } catch (error) {
       console.error("❌ Error en login:", error)
       setGeneralError("Error al conectar con el servidor")

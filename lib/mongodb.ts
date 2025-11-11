@@ -7,8 +7,17 @@ if (!MONGODB_URI) {
 }
 
 export async function connectDB() {
-  if (mongoose.connection.readyState >= 1) return;
-  return mongoose.connect(MONGODB_URI);
-}
+  if (mongoose.connection.readyState >= 1) {
+    console.log("✅ MongoDB ya está conectado");
+    return mongoose.connection;
+  }
 
-export default connectDB();
+  try {
+    await mongoose.connect(MONGODB_URI);
+    console.log("✅ Conectado a MongoDB");
+    return mongoose.connection;
+  } catch (error) {
+    console.error("❌ Error conectando a MongoDB:", error);
+    throw error;
+  }
+}

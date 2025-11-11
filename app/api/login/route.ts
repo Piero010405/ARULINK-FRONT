@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "@/models/user";
-import "@/lib/mongodb";
+import { connectDB } from "@/lib/mongodb"; // ✅ Import correcto
 
 const JWT_SECRET = "supersecreto123"; // cámbialo luego por algo más seguro
 
 export async function POST(req: Request) {
   try {
+    await connectDB(); // ✅ Conecta a la BD antes de hacer consultas
+
     const { email, password } = await req.json();
 
     if (!email || !password) {
