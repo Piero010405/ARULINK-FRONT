@@ -93,7 +93,6 @@ export default function ChatPanel() {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full px-4 py-2 rounded-full border border-gray-300 focus:ring-2 focus:ring-red-700 outline-none"
           />
-<<<<<<< HEAD
           <button
             data-testid="send-button"
             onClick={handleSendMessage}
@@ -101,8 +100,6 @@ export default function ChatPanel() {
           >
             ✉
           </button>
-=======
->>>>>>> 67903d8995e1cc4a86223dee944484cdf5e6d6e0
         </div>
 
         <div className="flex-1 overflow-y-auto">
