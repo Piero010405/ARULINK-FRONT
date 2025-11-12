@@ -7,9 +7,9 @@ const MONGODB_URI = process.env.MONGODB_URI;
 (async () => {
   try {
     if (!MONGODB_URI) {
-      throw new Error("🔴 La variable de entorno MONGODB_URI no está definida.");
+      throw new Error("⚠️ No se encontró MONGODB_URI en .env.local");
     }
-    
+
     await mongoose.connect(MONGODB_URI);
     const hashed = await bcrypt.hash("Password123!", 10);
     const user = await User.create({
