@@ -2,10 +2,14 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import User from "./models/user";
 
-const MONGODB_URI = "mongodb+srv://sniper201665_db_user:HCWuytQ4TUHQbtuD@arulinkdb.r3emnk6.mongodb.net/arulinkdb?retryWrites=true&w=majority";
+const MONGODB_URI = process.env.MONGODB_URI;
 
 (async () => {
   try {
+    if (!MONGODB_URI) {
+      throw new Error("🔴 La variable de entorno MONGODB_URI no está definida.");
+    }
+    
     await mongoose.connect(MONGODB_URI);
     const hashed = await bcrypt.hash("Password123!", 10);
     const user = await User.create({
