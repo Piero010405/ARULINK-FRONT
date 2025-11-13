@@ -1,11 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
 
 export default function MenuPrincipal() {
-  const router = useRouter()
+  const { user } = useAuth()
   const [dateTime, setDateTime] = useState("")
+
+  const router = useRouter()
 
   useEffect(() => {
     const updateTime = () => {

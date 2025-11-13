@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -9,7 +10,7 @@ export default function LoginForm() {
   const [emailError, setEmailError] = useState("")
   const [passwordError, setPasswordError] = useState("")
   const [generalError, setGeneralError] = useState("")
-  const router = useRouter()
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -17,32 +18,8 @@ export default function LoginForm() {
     setPasswordError("")
     setGeneralError("")
 
-    try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        if (data.error === "Usuario no encontrado") {
-          setEmailError("Correo electrónico incorrecto")
-        } else if (data.error === "Contraseña incorrecta") {
-          setPasswordError("Contraseña incorrecta")
-        } else {
-          setGeneralError("Error al iniciar sesión")
-        }
-        return
-      }
-
-      localStorage.setItem("token", data.token)
-      router.push("/menu-principal") // ✅ Redirige a la vista principal
-    } catch (error) {
-      console.error("❌ Error en login:", error)
-      setGeneralError("Error al conectar con el servidor")
-    }
+    const success = await login(email, password)
+    if (!success) setGeneralError("Credenciales inválidas o error de conexión")
   }
 
   return (
