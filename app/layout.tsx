@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import { AuthProvider } from "@/providers/AuthProvider"
+import { AuthProvider } from '@/context/AuthProvider'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
