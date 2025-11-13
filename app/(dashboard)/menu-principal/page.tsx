@@ -38,7 +38,7 @@ export default function MenuPrincipal() {
       </header>
 
       {/* Main content */}
-      <main className="flex flex-col items-center justify-center flex-grow text-center py-16">
+      <main className="flex flex-col items-center justify-center grow text-center py-16">
         <h2 className="text-3xl font-bold text-red-700 mb-12">Bienvenido Kenny</h2>
 
         <div className="flex flex-col md:flex-row gap-10">
