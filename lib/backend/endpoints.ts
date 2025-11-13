@@ -1,4 +1,4 @@
-// src/lib/api/endpoints.ts
+// src/lib/backend/endpoints.ts
 // Endpoints de la API en FAST API - BACKEND
 export const API_BACKEND_ENDPOINTS = {
   AUTH: {
