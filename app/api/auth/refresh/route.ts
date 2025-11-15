@@ -1,15 +1,30 @@
-// src/api/auth/refresh/route.ts
+// app/api/auth/refresh/route.ts
+import { NextResponse } from "next/server";
 import { apiClient } from "@/lib/backend/apiClient";
 import { API_BACKEND_ENDPOINTS } from "@/lib/backend/endpoints";
 import { TokenResponse } from "@/types/auth";
-import { setAccessToken } from "@/lib/utils/token";
 
-export async function refreshToken(): Promise<TokenResponse> {
-  const response = await apiClient<TokenResponse>(
-    API_BACKEND_ENDPOINTS.AUTH.REFRESH,
-    { method: "POST" }
-  );
+export async function POST() {
+  try {
+    const response = await apiClient<TokenResponse>(
+      API_BACKEND_ENDPOINTS.AUTH.REFRESH,
+      { method: "POST" }
+    );
 
-  setAccessToken(response.access_token);
-  return response;
+    const res = NextResponse.json(response, { status: 200 });
+
+    // Actualizamos cookie del token
+    res.cookies.set("access_token", response.access_token, {
+      httpOnly: true,
+      path: "/",
+    });
+
+    return res;
+
+  } catch (err) {
+    return NextResponse.json(
+      { message: "Unable to refresh token" },
+      { status: 401 }
+    );
+  }
 }

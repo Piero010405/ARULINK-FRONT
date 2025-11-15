@@ -35,6 +35,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify({ email, password }),
       })
 
+      console.log("Login response AuthProvider:", res)
+
       if (!res.ok) return false
 
       const data = await res.json()
