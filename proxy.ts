@@ -8,7 +8,7 @@ const PUBLIC_PATHS = [
   "/api/auth/refresh"
 ]
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
   const token = req.cookies.get("access_token")?.value
 
