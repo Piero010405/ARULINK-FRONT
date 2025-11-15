@@ -1,11 +1,13 @@
 "use client"
 
-import { createContext, useContext } from "react"
+import { createContext } from "react"
 
 export interface User {
   id: string
   email: string
-  name: string
+  full_name: string
+  role: string
+  is_active: boolean
 }
 
 export interface AuthContextType {

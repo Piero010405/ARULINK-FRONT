@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const res = await fetch("/api/auth/me", { cache: "no-store" })
         if (res.ok) {
           const data = await res.json()
+          console.log("Loaded session user:", data)
           setUser(data.user)
         }
       } catch (err) {
@@ -34,8 +35,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       })
-
-      console.log("Login response AuthProvider:", res)
 
       if (!res.ok) return false
 
