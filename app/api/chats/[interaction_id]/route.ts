@@ -5,19 +5,22 @@ import { API_BACKEND_ENDPOINTS } from "@/lib/backend/endpoints";
 import { MessagesListResponse } from "@/types/chats";
 
 export async function GET(
-  req: Request,
-  context: { params: { interaction_id: string } }
+  _request: Request,
+  context: { params: Promise<{ interaction_id: string }> }
 ) {
   try {
+    const { interaction_id } = await context.params;
+
     const response = await apiClient<MessagesListResponse>(
-      API_BACKEND_ENDPOINTS.CHATS.GET_INTERACTION_BY_ID(context.params.interaction_id),
+      API_BACKEND_ENDPOINTS.CHATS.GET_INTERACTION_BY_ID(interaction_id),
       { method: "GET" }
     );
 
-    return NextResponse.json(response, { status: 200 });
-  } catch (err) {
+    return NextResponse.json(response);
+  } catch (error: any) {
+    console.error("Error en GET /api/chats/[interaction_id]:", error);
     return NextResponse.json(
-      { message: "Unable to fetch chat messages" },
+      { success: false, error: error.message },
       { status: 500 }
     );
   }

@@ -1,3 +1,5 @@
+import { off } from "process";
+
 // src/types/chats.ts
 export type ChatType = "individual" | "group" | "broadcast";
 export type MessageType =
@@ -50,16 +52,21 @@ export interface DeleteCacheResponse {
 
 export interface Message {
   id: string;
-  from: string;
   body: string;
-  type: MessageType;
   timestamp: string;
+  from_me: boolean;
+  type: MessageType;
+  from: string;
   ack?: MessageAck;
 }
 
 export interface MessagesListResponse {
-  interaction_id: string;
   messages: Message[];
+  total: number;
+  limit: number;
+  offset: number;
+  summary: string;
+  chat_id: string;
 }
 
 export interface SendMessageRequest {
