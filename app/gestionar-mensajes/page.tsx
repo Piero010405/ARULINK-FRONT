@@ -1,6 +1,6 @@
 // app/gestionar-mensajes/page.tsx
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ChatHeader from "./components/ChatHeader";
 import ChatsSidebar from "./components/ChatsSidebar";
 import ChatWindow from "./components/ChatWindow";
@@ -18,7 +18,7 @@ export default function GestionarMensajes() {
 
   // use interaction_id to fetch history and fill store
   const interactionId = selected?.interaction_id;
-  const { messages, loading, resp, meta } = useChatMessages(interactionId);
+  const { messages, loading, resp, meta } = useChatMessages(interactionId)
 
   // start streams: pass active interaction id to listen per-chat; assigned stream always open
   useChatStreams(interactionId);

@@ -37,10 +37,17 @@ export function useChatMessages(interactionId?: string) {
   }, [interactionId]);
 
   // expose messages via store (so SSE mutations are reflected)
-  const messagesFromStore = useChatStore((s) => (interactionId ? s.chats[interactionId] ?? [] : []));
+  const messagesFromStore = useChatStore(
+    (s) => (interactionId ? s.chats[interactionId] : undefined),
+  );
+
 
   // meta also from store
-  const meta = useChatStore((s) => (interactionId ? s.meta[interactionId] ?? null : null));
+  const meta = useChatStore(
+    (s) => (interactionId ? s.meta[interactionId] : undefined)
+  );
 
-  return { messages: messagesFromStore, loading, refresh: fetchMessages, resp, meta };
+
+  return { messages: messagesFromStore ?? [], loading, refresh: fetchMessages, resp, meta: meta ?? null };
+
 }
