@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useChatStore } from "../store/chatStore";
 import { MessagesListResponse } from "@/types/chats";
+import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
 
 export function useChatMessages(interactionId?: string) {
   const setChatMessages = useChatStore((s) => s.setChatMessages);
@@ -17,7 +18,7 @@ export function useChatMessages(interactionId?: string) {
     }
     setLoading(true);
     try {
-      const res = await fetch(`/api/chats/${interactionId}`);
+      const res = await fetch(API_FRONTEND_ENDPOINTS.CHATS.INTERACTION(interactionId));
       if (!res.ok) throw new Error("Failed messages");
       const data: MessagesListResponse = await res.json();
       // Key choice: use interactionId as key in store

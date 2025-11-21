@@ -1,4 +1,4 @@
-// app/api/chats/[chat_id]/messages/route.ts
+// app/api/chats/chat/[chat_id]/messages/route.ts
 import { NextResponse } from "next/server";
 import { apiClient } from "@/lib/backend/apiClient";
 import { API_BACKEND_ENDPOINTS } from "@/lib/backend/endpoints";

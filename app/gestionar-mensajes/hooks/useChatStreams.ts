@@ -3,6 +3,7 @@
 
 import { useEffect, useRef } from "react";
 import { useChatStore } from "../store/chatStore";
+import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
 
 type StreamMessage = {
   type: string;
@@ -24,7 +25,7 @@ export function useChatStreams(activeInteractionId?: string) {
   useEffect(() => {
     // assigned stream (aggregated notifications)
     if (!assignedRef.current) {
-      const url = "/api/chats/stream/assigned"; // local proxy to backend SSE
+      const url = API_FRONTEND_ENDPOINTS.CHATS.STREAM_ASSIGNED; // local proxy to backend SSE
       const es = new EventSource(url);
       assignedRef.current = es;
 
@@ -80,7 +81,7 @@ export function useChatStreams(activeInteractionId?: string) {
 
     if (!activeInteractionId) return;
 
-    const url = `/api/chats/${activeInteractionId}/stream`; // proxy SSE -> backend interaction stream
+    const url = API_FRONTEND_ENDPOINTS.CHATS.INTERACTION_STREAM(activeInteractionId); // proxy SSE -> backend interaction stream
     const es = new EventSource(url);
     interactionRef.current = es;
 

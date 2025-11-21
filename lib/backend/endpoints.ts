@@ -15,7 +15,8 @@ export const API_BACKEND_ENDPOINTS = {
     GET_INTERACTION_BY_ID: (interaction_id: string) => `/api/v1/chats/${interaction_id}`,
     GET_INTERACTION_STREAM_BY_ID: (interaction_id: string) => `/api/v1/chats/${interaction_id}/stream`,
     UPDATE_INTERACTION_STATE_BY_ID: (interaction_id: string) => `/api/v1/chats/interactions/${interaction_id}/state`,
-    POST_CHAT_BY_ID: (interaction_id: string) => `/api/v1/chats/${interaction_id}/messages`,
+    CHATS_STREAM_ASSIGNED: '/api/v1/chats/stream/assigned',
+    POST_CHAT_BY_ID: (chat_id: string) => `/api/v1/chats/${chat_id}/messages`,
   },
   WEBHOOKS: {
     WAHA_POST : '/api/v1/webhooks/waha',

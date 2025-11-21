@@ -4,6 +4,7 @@
 import { useEffect } from "react";
 import { useChatStore } from "../store/chatStore";
 import { ChatsOverviewResponse } from "@/types/chats";
+import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
 
 export function useChatsOverview(pollMs = 20000) {
   const setOverview = useChatStore((s) => s.setOverview);
@@ -11,7 +12,7 @@ export function useChatsOverview(pollMs = 20000) {
 
   const fetchOverview = async () => {
     try {
-      const res = await fetch("/api/chats/overview");
+      const res = await fetch(API_FRONTEND_ENDPOINTS.CHATS.OVERVIEW);
       if (!res.ok) throw new Error("Failed overview");
       const data: ChatsOverviewResponse = await res.json();
       if (data.success) {

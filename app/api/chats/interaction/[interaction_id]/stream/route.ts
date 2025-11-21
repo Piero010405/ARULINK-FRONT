@@ -1,4 +1,4 @@
-// app/api/chats/[interaction_id]/stream/route.ts
+// app/api/chats/interaction/[interaction_id]/stream/route.ts
 import { NextResponse } from "next/server";
 import { BACKEND_URL } from "@/lib/backend/config";
 
