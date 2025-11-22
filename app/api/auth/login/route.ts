@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   } catch (err: unknown) {
     return NextResponse.json(
       { message: "Invalid credentials" },
-      { status: 401 }
+      { status: 401 },
     );
   }
 }

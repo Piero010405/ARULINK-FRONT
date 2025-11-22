@@ -33,6 +33,8 @@ export async function apiClient<T>(
     }
   }
 
+  // console.log(`Intentando conectar a: ${BACKEND_URL}${endpoint}`);
+
   const response = await fetch(`${BACKEND_URL}${endpoint}`, {
     ...options,
     headers,
