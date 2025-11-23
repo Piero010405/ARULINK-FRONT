@@ -1,28 +1,28 @@
 // app/api/chats/interaction/[interaction_id]/stream/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { BACKEND_URL } from "@/lib/backend/config";
+import { API_BACKEND_ENDPOINTS } from "@/lib/backend/endpoints";
+import { cookies } from "next/headers";
 
-export const dynamic = "force-dynamic"; // necesario para SSE
+export async function GET(_req: NextRequest, { params }: { params: { interaction_id: string } }) {
+  try {
+    const { interaction_id } = params;
+    if (!interaction_id) return NextResponse.json({ detail: "Missing interaction id" }, { status: 400 });
 
-export async function GET(
-  req: Request,
-  context: { params: { interaction_id: string } }
-) {
-  const { searchParams } = new URL(req.url);
-  const token = searchParams.get("token");
+    const cookieStore = await cookies();
+    const token = cookieStore.get("access_token")?.value;
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  if (!token)
-    return NextResponse.json({ error: "Missing token" }, { status: 400 });
+    const backendUrl = `${BACKEND_URL}${API_BACKEND_ENDPOINTS.CHATS.GET_INTERACTION_STREAM_BY_ID(interaction_id)}`;
+    const backendRes = await fetch(backendUrl, { method: "GET", headers });
 
-  const url = `${BACKEND_URL}/api/v1/chats/${context.params.interaction_id}/stream?token=${token}`;
-
-  const backendResp = await fetch(url);
-
-  return new Response(backendResp.body, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      Connection: "keep-alive",
-      "Cache-Control": "no-cache",
-    },
-  });
+    return new NextResponse(backendRes.body, {
+      status: backendRes.status,
+      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache, no-transform" },
+    });
+  } catch (err: any) {
+    console.error("Interaction stream proxy error:", err);
+    return NextResponse.json({ detail: "Error proxy stream", error: err?.message }, { status: 500 });
+  }
 }
