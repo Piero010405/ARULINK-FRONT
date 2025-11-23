@@ -24,11 +24,15 @@ export type MessageAck =
 export interface ChatOverviewItem {
   id: string;
   name: string;
+  type: 'individual' | 'group' | string;
+  timestamp: string | null;
   unread_count: number;
-  last_message_time: string;
-  is_group: boolean;
-  is_archived: boolean;
-  interaction_id?: string;
+  last_message: string | null;
+  picture_url: string | null;
+  archived: boolean;
+  pinned: boolean;
+  summary: string | null;
+  interaction_id: string;
 }
 
 export interface ChatsOverviewResponse {

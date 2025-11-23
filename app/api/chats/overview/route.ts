@@ -8,20 +8,20 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
 
-    // Leer query params del usuario (si no los pasa, usar valores por defecto)
     const limit = url.searchParams.get("limit") ?? "20";
     const offset = url.searchParams.get("offset") ?? "0";
+    const state = url.searchParams.get("state") ?? "pending"; 
+    // 👈 por defecto pending, como el backend
 
-    // Construir la URL final para el backend
-    const endpoint = `${API_BACKEND_ENDPOINTS.CHATS.OVER_VIEW}?limit=${limit}&offset=${offset}`;
+    const endpoint =
+      `${API_BACKEND_ENDPOINTS.CHATS.OVER_VIEW}` +
+      `?limit=${limit}&offset=${offset}&state=${state}`;
 
-    const response = await apiClient<ChatsOverviewResponse>(
-      endpoint,
-      { method: "GET" }
-    );
+    const response = await apiClient<ChatsOverviewResponse>(endpoint, {
+      method: "GET",
+    });
 
     return NextResponse.json(response, { status: 200 });
-
   } catch (err) {
     console.error("Error overview:", err);
 
@@ -31,3 +31,4 @@ export async function GET(req: Request) {
     );
   }
 }
+

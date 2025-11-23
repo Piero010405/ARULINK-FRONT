@@ -1,6 +1,6 @@
 // app/gestionar-mensajes/components/ChatsSidebar.tsx
 "use client";
-import { useChatsOverview } from "../hooks/useChatsOverview";
+import { useAssignedChats } from "../hooks/useAssignedChats";
 
 interface Props {
   selected: string | null;
@@ -10,9 +10,9 @@ interface Props {
 }
 
 export default function ChatsSidebar({ selected, onSelect, search, setSearch }: Props) {
-  const { overview } = useChatsOverview();
+  const { assigned } = useAssignedChats();
   // use state from store if needed
-  const items = overview; // overview from hook populates store
+  const items = assigned; // overview from hook populates store
 
   const filtered = items.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -29,7 +29,9 @@ export default function ChatsSidebar({ selected, onSelect, search, setSearch }: 
           <div key={chat.id} onClick={() => onSelect(chat.id)} className={`p-4 cursor-pointer border-b ${selected === chat.id ? "bg-gray-100": ""}`}>
             <p className="font-semibold">{chat.name}</p>
             <p className="text-sm text-gray-500">{chat.unread_count>0 ? `${chat.unread_count} mensajes` : "Sin nuevos"}</p>
-            <span className="text-xs text-gray-400">{formatTime(chat.last_message_time)}</span>
+            <span className="text-xs text-gray-400">
+              {chat.timestamp ? formatTime(chat.timestamp) : 'Sin fecha'}
+            </span>
           </div>
         ))}
       </div>
