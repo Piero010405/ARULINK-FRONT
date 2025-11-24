@@ -41,7 +41,7 @@ export default function Dashboard() {
           </div>
 
           {/* Right Chat Panel */}
-          <div className="w-96 bg-gradient-to-b from-gray-50 to-white border-l border-gray-200 flex flex-col">
+          <div className="w-96 bg-linear-to-b from-gray-50 to-white border-l border-gray-200 flex flex-col">
             <ChatPanel />
           </div>
         </div>

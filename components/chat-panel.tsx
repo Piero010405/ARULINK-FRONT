@@ -95,7 +95,7 @@ export default function ChatPanel() {
           />
           <button
             data-testid="send-button"
-            onClick={handleSendMessage}
+            onClick={handleSend}
             className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md transition-colors font-medium text-sm"
           >
             ✉
@@ -180,7 +180,7 @@ export default function ChatPanel() {
               />
               <button
                 onClick={handleSend}
-                className="bg-red-700 hover:bg-red-800 text-white px-5 py-2 rounded-full font-medium transition"
+                className="bg-red-700 hover:bg-red-800 text-white px-5 py-2 rounded-full font-medium transition cursor-pointer"
               >
                 Enviar
               </button>

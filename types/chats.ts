@@ -27,7 +27,7 @@ export interface ChatOverviewItem {
   type: 'individual' | 'group' | string;
   timestamp: string | null;
   unread_count: number;
-  last_message: string | null;
+  last_message: string | { id: string; timestamp: string | number; from_me: boolean; type: string; body: string; ack: number } | null;
   picture_url: string | null;
   archived: boolean;
   pinned: boolean;

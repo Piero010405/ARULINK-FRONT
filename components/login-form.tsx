@@ -115,7 +115,7 @@ export default function LoginForm() {
               {/* Botón principal */}
               <button
                 type="submit"
-                className="w-full bg-red-700 hover:bg-red-800 text-white font-medium py-3 rounded-full transition-colors duration-200 shadow-sm"
+                className="w-full bg-red-700 hover:bg-red-800 text-white font-medium py-3 rounded-full transition-colors duration-200 shadow-sm cursor-pointer"
               >
                 Acceder
               </button>
@@ -133,7 +133,7 @@ export default function LoginForm() {
               <button
                 type="button"
                 onClick={() => console.log("Login Google")}
-                className="w-full border border-gray-200 rounded-full py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 transition"
+                className="w-full border border-gray-200 rounded-full py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 transition cursor-pointer"
               >
                 <img src="/google.png" alt="google" className="h-5 w-5" />
                 <span className="text-sm text-gray-700">Continuar con Google</span>
