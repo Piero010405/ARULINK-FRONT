@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
+import { Loader } from "@/components/ui/Loader";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -10,6 +11,7 @@ export default function LoginForm() {
   const [emailError, setEmailError] = useState("")
   const [passwordError, setPasswordError] = useState("")
   const [generalError, setGeneralError] = useState("")
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -17,10 +19,16 @@ export default function LoginForm() {
     setEmailError("")
     setPasswordError("")
     setGeneralError("")
+    setLoading(true);
 
     const success = await login(email, password)
-    if (!success) setGeneralError("Credenciales inválidas o error de conexión")
+    if (!success) {
+      setGeneralError("Credenciales inválidas o error de conexión")
+      setLoading(false);
+    }
   }
+
+  if (loading) return <Loader text="Iniciando sesión..." />;
 
   return (
     <div className="w-screen h-screen flex items-center justify-center bg-gray-50">

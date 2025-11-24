@@ -3,12 +3,16 @@
 import { useState, useEffect, ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { AuthContext, User } from "./AuthContext"
+import { clearAccessToken } from "@/lib/utils/token";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
+   // ============================================
+  // LOAD SESSION INICIAL
+  // ============================================
   useEffect(() => {
     const loadSession = async () => {
       try {
@@ -28,6 +32,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadSession()
   }, [])
 
+  // ============================================
+  // MANEJO DEL TOKEN EXPIRADO
+  // ============================================
+  const handleExpiredSession = () => {
+    clearAccessToken();
+    setUser(null);
+    router.push("/login");
+  };
+
+  // Interceptor global: captura errores SESSION_EXPIRED del apiClient
+  useEffect(() => {
+    const originalError = console.error;
+
+    console.error = (msg, ...rest) => {
+      if (typeof msg === "string" && msg.includes("SESSION_EXPIRED")) {
+        handleExpiredSession();
+      }
+      originalError(msg, ...rest);
+    };
+  }, []);
+
+  // ============================================
+  // LOGIN
+  // ============================================
   const login = async (email: string, password: string) => {
     try {
       const res = await fetch("/api/auth/login", {
@@ -48,8 +76,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  // ============================================
+  // LOGOUT
+  // ============================================
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" })
+    clearAccessToken();
     setUser(null)
     router.push("/login")
   }

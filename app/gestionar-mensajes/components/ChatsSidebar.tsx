@@ -1,6 +1,7 @@
 // app/gestionar-mensajes/components/ChatsSidebar.tsx
 "use client";
 import { ChatOverviewItem } from "@/types/chats";
+import { Loader } from "@/components/ui/Loader";
 
 interface Props {
   selected: string | null;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function ChatsSidebar({ selected, onSelect, search, setSearch, assigned }: Props) {
+  if (!assigned) return <Loader />;
   // use state from store if needed
   const items = assigned; // overview from hook populates store
 

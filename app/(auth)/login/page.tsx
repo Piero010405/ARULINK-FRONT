@@ -3,6 +3,7 @@ import LoginForm from "@/components/login-form"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { Loader } from "@/components/ui/Loader";
 
 export default function LoginPage() {
   const { user, loading } = useAuth()
@@ -12,7 +13,7 @@ export default function LoginPage() {
     if (!loading && user) router.push("/menu-principal")
   }, [user, loading, router])
 
-  if (loading) return <div className="p-10 text-center">Cargando...</div>
+  if (loading) return <Loader text="Validando sesión..." />;
 
   return <LoginForm />
 }

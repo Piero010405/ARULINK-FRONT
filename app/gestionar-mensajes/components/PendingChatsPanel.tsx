@@ -2,8 +2,10 @@
 "use client";
 import { useAssignChat } from "../hooks/useAssignChat";
 import { ChatOverviewItem } from "@/types/chats";
+import { Loader } from "@/components/ui/Loader";
 
 export function PendingChatsPanel({ pending }: { pending: ChatOverviewItem[] }) {
+  if (!pending) return <Loader />;
   const { assign } = useAssignChat();
 
   if (!pending || pending.length === 0) return null;

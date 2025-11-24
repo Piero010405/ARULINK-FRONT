@@ -12,18 +12,17 @@ export async function apiClient<T>(
   options: RequestInit = {},
   useAuth: boolean = true
 ): Promise<T> {
-
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
 
-  // ---------------------------
+  // ================================
   // 1. Cargar token
-  // ---------------------------
+  // ================================
   let token: string | undefined;
 
-   if (useAuth) {
+  if (useAuth) {
     if (isServer()) {
       const cookieStore = await cookies();
       token = cookieStore.get("access_token")?.value;
@@ -36,40 +35,30 @@ export async function apiClient<T>(
     }
   }
 
-  // console.log(`Intentando conectar a: ${BACKEND_URL}${endpoint}`);
-
-  // ---------------------------
-  // 2. Ejecutar request
-  // ---------------------------
+  // ================================
+  // 2. Request
+  // ================================
   const response = await fetch(`${BACKEND_URL}${endpoint}`, {
     ...options,
     headers,
     cache: "no-store",
   });
 
-  // ---------------------------
-  // 3. Manejar errores
-  // ---------------------------
+  // ================================
+  // 3. Manejo de errores
+  // ================================
   if (!response.ok) {
     const text = await response.text();
 
-    // 🔥 Detectar token expirado
+    // ⭐ Detectar token expirado
     if (response.status === 401 && text.includes("Token expirado")) {
       console.warn("⚠️ Token expirado detectado.");
 
-      // --------------------------------
-      // CLIENTE → limpiar y redirigir
-      // --------------------------------
       if (!isServer()) {
-        clearAccessToken();  // limpia localStorage
-        window.location.href = "/login";
-        return Promise.reject("Token expirado");
+        clearAccessToken();
       }
 
-      // --------------------------------
-      // SERVIDOR → señal para logout
-      // --------------------------------
-      throw new Error("SESSION_EXPIRED");
+      throw new Error("SESSION_EXPIRED"); // Señal al front
     }
 
     throw new Error(`Error ${response.status}: ${text}`);
