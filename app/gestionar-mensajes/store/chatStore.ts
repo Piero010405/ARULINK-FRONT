@@ -7,7 +7,6 @@ import {
   Message,
   MessagesListResponse,
   AssignedStreamMessage,
-  MessageAck,
 } from "@/types/chats";
 
 export interface ChatMeta {
@@ -38,6 +37,7 @@ interface ChatState {
 
   removeFromPending: (interactionId: string) => void;
   addToAssigned: (item: ChatOverviewItem) => void;
+  upsertOverviewItem: (item: ChatOverviewItem) => void;
 
   // ==========================
   // CHATS
@@ -86,6 +86,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((s) => ({
       pending: s.pending.filter((c) => c.interaction_id !== interactionId),
     })),
+
+  // Nuevo método requerido por tus hooks (CORRECTO)
+  upsertOverviewItem: (item) =>
+    set((s) => {
+      const exists = s.assigned.find((c) => c.id === item.id);
+
+      return exists
+        ? {
+            assigned: s.assigned.map((c) =>
+              c.id === item.id ? { ...c, ...item } : c
+            ),
+          }
+        : { assigned: [...s.assigned, item] };
+    }),
 
   // ====================================================
   // CHATS + META
@@ -157,8 +171,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   // STREAM (SSE)
   // ====================================================
   applyStreamMessage: (msg) => {
-    const key = msg.interaction_id;
-    const existing = get().chats[key] ?? [];
+    const id = msg.interaction_id;
+    if (!id) return;
 
     const newMessage: Message = {
       id: msg.timestamp.toString(),
@@ -170,20 +184,23 @@ export const useChatStore = create<ChatState>((set, get) => ({
       ack: 0,
     };
 
+    // Evitar duplicados
+    const existing = get().chats[id] ?? [];
     if (existing.some((m) => m.id === newMessage.id)) return;
 
-    set({
+    // Insertar mensaje
+    set((s) => ({
       chats: {
-        ...get().chats,
-        [key]: [...existing, newMessage],
+        ...s.chats,
+        [id]: [...existing, newMessage],
       },
-    });
+    }));
 
     // Notificación
     get().addNotification({
       id: "notif-" + Date.now(),
       title: "Nuevo mensaje",
-      message: newMessage.body,
+      message: newMessage.body ?? "(sin contenido)",
     });
   },
 

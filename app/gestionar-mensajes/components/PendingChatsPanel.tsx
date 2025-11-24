@@ -12,7 +12,7 @@ export function PendingChatsPanel({ pending }: { pending: ChatOverviewItem[] }) 
     <div className="flex gap-3 overflow-x-auto no-scrollbar py-1">
       {pending.map((item) => {
         const key = item.interaction_id ?? item.id ?? item.name;
-
+        
         // FIX: last_message puede ser string o un objeto del backend
         const lastMessageText =
           typeof item.last_message === "string"

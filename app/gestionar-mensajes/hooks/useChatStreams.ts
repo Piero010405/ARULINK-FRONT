@@ -49,8 +49,39 @@ export function useChatStreams(activeInteractionId?: string) {
             }
             // update overview item unread_count or last_message_time if available
             if (parsed.chat_id) {
-              upsertOverviewItem({ id: parsed.chat_id, name: parsed.chat_id, unread_count: 1, last_message_time: new Date((parsed.timestamp ?? Date.now())*1000).toISOString(), is_group: false, is_archived: false, interaction_id: parsed.interaction_id });
+              upsertOverviewItem({
+                id: parsed.chat_id,
+                name: parsed.chat_id,
+
+                type: "individual",
+
+                timestamp: new Date(
+                  (parsed.timestamp ?? Date.now()) * 1000
+                ).toISOString(),
+
+                unread_count: 1,
+
+                last_message: {
+                  id: `${parsed.timestamp ?? Date.now()}`,
+                  timestamp: new Date(
+                    (parsed.timestamp ?? Date.now()) * 1000
+                  ).toISOString(),
+                  from_me: false,
+                  type: "text",
+                  body: parsed.body ?? "",
+                  ack: 0,
+                },
+
+                picture_url: null,
+                archived: false,
+                pinned: false,
+                summary: null,
+
+                // 🔥 FIX — tu interfaz exige string
+                interaction_id: parsed.interaction_id ?? parsed.chat_id,
+              });
             }
+
           }
         } catch (e) {
           // ignore non-json messages (pings)
