@@ -38,7 +38,7 @@ export default function GestionarMensajes() {
 
       {/* ANUNCIOS HORIZONTALES DE CHATS PENDIENTES */}
       <div className="bg-white border-b px-4 py-2">
-        <PendingChatsPanel />
+        <PendingChatsPanel pending={pending} />
       </div>
 
       <main className="flex grow bg-gray-100 overflow-hidden">

@@ -1,10 +1,9 @@
 // app/gestionar-mensajes/components/PendingChatsPanel.tsx
 "use client";
-import { usePendingChats } from "../hooks/usePendingChats";
 import { useAssignChat } from "../hooks/useAssignChat";
+import { ChatOverviewItem } from "@/types/chats";
 
-export function PendingChatsPanel() {
-  const { pending } = usePendingChats();
+export function PendingChatsPanel({ pending }: { pending: ChatOverviewItem[] }) {
   const { assign } = useAssignChat();
 
   if (!pending || pending.length === 0) return null;
