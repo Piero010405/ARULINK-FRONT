@@ -6,12 +6,15 @@ import { useChatStore } from "../store/chatStore";
 import { ChatsOverviewResponse } from "@/types/chats";
 import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
 
-export function usePendingChats(pollMs = 15000) {
+export function usePendingChats() {
   const setPending = useChatStore((s) => s.setPending);
 
   async function fetchPending() {
     try {
-      const res = await fetch(`${API_FRONTEND_ENDPOINTS.CHATS.OVERVIEW}?state=pending`);
+      const res = await fetch(
+        `${API_FRONTEND_ENDPOINTS.CHATS.OVERVIEW}?state=pending`,
+        { cache: "no-store" }
+      );
       if (!res.ok) return;
 
       const data: ChatsOverviewResponse = await res.json();
@@ -23,8 +26,6 @@ export function usePendingChats(pollMs = 15000) {
 
   useEffect(() => {
     fetchPending();
-    const t = setInterval(fetchPending, pollMs);
-    return () => clearInterval(t);
   }, []);
 
   return {

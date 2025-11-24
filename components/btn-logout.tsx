@@ -10,9 +10,9 @@ export default function BtnLogout() {
     }
 
     return (
-        <button
+         <button
             onClick={handleLogout}
-            className="bg-white text-red-800 font-bold px-3 py-1 rounded hover:bg-red-100 transition cursor-pointer"
+            className="bg-white text-red-800 px-4 py-1 rounded-full text-sm font-semibold hover:bg-gray-100 transition cursor-pointer"
         >
             Salir
         </button>

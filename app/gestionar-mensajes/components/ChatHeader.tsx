@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import BtnLogout from "@/components/btn-logout";
 
 export default function ChatHeader() {
   const router = useRouter();
@@ -31,12 +32,7 @@ export default function ChatHeader() {
       <img src="/logo_blanco.png" alt="Gobierno del Perú" className="h-10" />
       <div className="text-lg font-bold">{dateTime}</div>
 
-      <button
-        onClick={() => router.push("/menu-principal")}
-        className="bg-white text-red-800 px-4 py-1 rounded-full text-sm font-semibold hover:bg-gray-100 transition"
-      >
-        Volver
-      </button>
+      <BtnLogout />
     </header>
   );
 }

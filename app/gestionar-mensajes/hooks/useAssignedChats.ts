@@ -6,12 +6,15 @@ import { useChatStore } from "../store/chatStore";
 import { ChatsOverviewResponse } from "@/types/chats";
 import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
 
-export function useAssignedChats(pollMs = 15000) {
+export function useAssignedChats() {
   const setAssigned = useChatStore((s) => s.setAssigned);
 
   async function fetchAssigned() {
     try {
-      const res = await fetch(`${API_FRONTEND_ENDPOINTS.CHATS.OVERVIEW}?state=derived`);
+      const res = await fetch(
+        `${API_FRONTEND_ENDPOINTS.CHATS.OVERVIEW}?state=derived`,
+        { cache: "no-store" }
+      );
       if (!res.ok) return;
 
       const data: ChatsOverviewResponse = await res.json();
@@ -23,8 +26,6 @@ export function useAssignedChats(pollMs = 15000) {
 
   useEffect(() => {
     fetchAssigned();
-    const t = setInterval(fetchAssigned, pollMs);
-    return () => clearInterval(t);
   }, []);
 
   return {
