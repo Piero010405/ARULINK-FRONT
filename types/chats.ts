@@ -19,7 +19,8 @@ export type MessageAck =
   | "SERVER"
   | "DEVICE"
   | "READ"
-  | "PLAYED";
+  | "PLAYED"
+  | number;
 
 export interface ChatOverviewItem {
   id: string;
@@ -98,4 +99,14 @@ export interface UpdateInteractionStateResponse {
   message: string;
   new_state: string;
   interaction_id: string;
+}
+
+export interface AssignedStreamMessage {
+  type: "message";
+  interaction_id: string;
+  chat_id: string;
+  from: string;
+  body: string;
+  timestamp: number;
+  from_me: boolean;
 }

@@ -95,7 +95,7 @@ export default function ChatWindow({
           />
           <button
             onClick={handleSend}
-            className="bg-red-700 text-white px-5 py-2 rounded-full"
+            className="bg-red-700 text-white px-5 py-2 rounded-full cursor-pointer"
           >
             Enviar
           </button>

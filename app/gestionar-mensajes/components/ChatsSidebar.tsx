@@ -1,16 +1,16 @@
 // app/gestionar-mensajes/components/ChatsSidebar.tsx
 "use client";
-import { useAssignedChats } from "../hooks/useAssignedChats";
+import { ChatOverviewItem } from "@/types/chats";
 
 interface Props {
   selected: string | null;
   onSelect: (id: string) => void;
   search: string;
   setSearch: (v: string) => void;
+  assigned: ChatOverviewItem[];
 }
 
-export default function ChatsSidebar({ selected, onSelect, search, setSearch }: Props) {
-  const { assigned } = useAssignedChats();
+export default function ChatsSidebar({ selected, onSelect, search, setSearch, assigned }: Props) {
   // use state from store if needed
   const items = assigned; // overview from hook populates store
 

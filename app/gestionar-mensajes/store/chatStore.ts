@@ -2,7 +2,13 @@
 "use client";
 
 import { create } from "zustand";
-import { ChatOverviewItem, Message, MessagesListResponse } from "@/types/chats";
+import {
+  ChatOverviewItem,
+  Message,
+  MessagesListResponse,
+  AssignedStreamMessage,
+  MessageAck,
+} from "@/types/chats";
 
 export interface ChatMeta {
   chat_id: string;
@@ -14,10 +20,16 @@ export interface ChatMeta {
   offset?: number;
 }
 
+export interface ChatNotification {
+  id: string;
+  title: string;
+  message: string;
+}
+
 interface ChatState {
-  // ===============================
-  // OVERVIEW (dividido)
-  // ===============================
+  // ==========================
+  // OVERVIEW
+  // ==========================
   pending: ChatOverviewItem[];
   assigned: ChatOverviewItem[];
 
@@ -27,9 +39,9 @@ interface ChatState {
   removeFromPending: (interactionId: string) => void;
   addToAssigned: (item: ChatOverviewItem) => void;
 
-  // ===============================
-  // MENSAJES
-  // ===============================
+  // ==========================
+  // CHATS
+  // ==========================
   chats: Record<string, Message[]>;
   meta: Record<string, ChatMeta>;
 
@@ -37,13 +49,25 @@ interface ChatState {
   addMessageToChat: (key: string, message: Message) => void;
   updateMessageInChat: (key: string, id: string, patch: Partial<Message>) => void;
   removeMessageFromChat: (key: string, id: string) => void;
+
+  // ==========================
+  // STREAM (SSE)
+  // ==========================
+  applyStreamMessage: (msg: AssignedStreamMessage) => void;
+
+  // ==========================
+  // NOTIFICATIONS
+  // ==========================
+  notifications: ChatNotification[];
+  addNotification: (n: ChatNotification) => void;
+  removeNotification: (id: string) => void;
 }
 
-export const useChatStore = create<ChatState>((set) => ({
+export const useChatStore = create<ChatState>((set, get) => ({
 
-  // =============================================
+  // ====================================================
   // OVERVIEW
-  // =============================================
+  // ====================================================
   pending: [],
   assigned: [],
 
@@ -52,7 +76,10 @@ export const useChatStore = create<ChatState>((set) => ({
 
   addToAssigned: (item) =>
     set((s) => ({
-      assigned: [...s.assigned.filter(c => c.interaction_id !== item.interaction_id), item],
+      assigned: [
+        ...s.assigned.filter((c) => c.interaction_id !== item.interaction_id),
+        item,
+      ],
     })),
 
   removeFromPending: (interactionId) =>
@@ -60,9 +87,9 @@ export const useChatStore = create<ChatState>((set) => ({
       pending: s.pending.filter((c) => c.interaction_id !== interactionId),
     })),
 
-  // =============================================
+  // ====================================================
   // CHATS + META
-  // =============================================
+  // ====================================================
   chats: {},
   meta: {},
 
@@ -91,12 +118,22 @@ export const useChatStore = create<ChatState>((set) => ({
     })),
 
   addMessageToChat: (key, message) =>
-    set((s) => ({
-      chats: {
-        ...s.chats,
-        [key]: [...(s.chats[key] ?? []), message],
-      },
-    })),
+    set((s) => {
+      const normalized: Message = {
+        ...message,
+        timestamp:
+          typeof message.timestamp === "number"
+            ? new Date(message.timestamp * 1000).toISOString()
+            : message.timestamp,
+      };
+
+      return {
+        chats: {
+          ...s.chats,
+          [key]: [...(s.chats[key] ?? []), normalized],
+        },
+      };
+    }),
 
   updateMessageInChat: (key, id, patch) =>
     set((s) => ({
@@ -114,5 +151,54 @@ export const useChatStore = create<ChatState>((set) => ({
         ...s.chats,
         [key]: (s.chats[key] ?? []).filter((m) => m.id !== id),
       },
+    })),
+
+  // ====================================================
+  // STREAM (SSE)
+  // ====================================================
+  applyStreamMessage: (msg) => {
+    const key = msg.interaction_id;
+    const existing = get().chats[key] ?? [];
+
+    const newMessage: Message = {
+      id: msg.timestamp.toString(),
+      type: "text",
+      body: msg.body,
+      from: msg.from,
+      from_me: msg.from_me,
+      timestamp: new Date(msg.timestamp * 1000).toISOString(),
+      ack: 0,
+    };
+
+    if (existing.some((m) => m.id === newMessage.id)) return;
+
+    set({
+      chats: {
+        ...get().chats,
+        [key]: [...existing, newMessage],
+      },
+    });
+
+    // Notificación
+    get().addNotification({
+      id: "notif-" + Date.now(),
+      title: "Nuevo mensaje",
+      message: newMessage.body,
+    });
+  },
+
+  // ====================================================
+  // NOTIFICATIONS
+  // ====================================================
+  notifications: [],
+
+  addNotification: (n) =>
+    set((s) => ({
+      notifications: [...s.notifications, n],
+    })),
+
+  removeNotification: (id) =>
+    set((s) => ({
+      notifications: s.notifications.filter((n) => n.id !== id),
     })),
 }));

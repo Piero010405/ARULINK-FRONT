@@ -10,6 +10,8 @@ import { useAssignedChats } from "./hooks/useAssignedChats";
 import { useChatMessages } from "./hooks/useChatMessages";
 import { useChatStreams } from "./hooks/useChatStreams";
 import { PendingChatsPanel } from "./components/PendingChatsPanel";
+import { useAssignedStream } from "./hooks/useAssignedStream";
+import { FloatingNotifications } from "./components/FloatingNotifications";
 
 export default function GestionarMensajes() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -30,42 +32,47 @@ export default function GestionarMensajes() {
 
   // suscribir SSE por interaction_id
   useChatStreams(interactionId);
+  useAssignedStream(); 
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden">
+    <div className="h-full w-full">
+      <FloatingNotifications />
+      <div className="h-screen w-screen flex flex-col overflow-hidden">
 
-      <ChatHeader />
+        <ChatHeader />
 
-      {/* ANUNCIOS HORIZONTALES DE CHATS PENDIENTES */}
-      <div className="bg-white border-b px-4 py-2">
-        <PendingChatsPanel pending={pending} />
-      </div>
+        {/* ANUNCIOS HORIZONTALES DE CHATS PENDIENTES */}
+        <div className="bg-white border-b px-4 py-2">
+          <PendingChatsPanel pending={pending} />
+        </div>
 
-      <main className="flex grow bg-gray-100 overflow-hidden">
+        <main className="flex grow bg-gray-100 overflow-hidden">
 
-        {/* SIDEBAR: usa los assigned */}
-        <ChatsSidebar
-          selected={selectedChatId}
-          onSelect={(chat_id) => setSelectedChatId(chat_id)}
-          search={search}
-          setSearch={setSearch}
-        />
-
-
-        {selected ? (
-          <ChatWindow
-            chatName={selected.name}
-            messages={messages}
-            summary={resp?.summary ?? meta?.summary}
-            sendToChatId={selected.id}
-            interactionId={interactionId}
+          {/* SIDEBAR: usa los assigned */}
+          <ChatsSidebar
+            selected={selectedChatId}
+            onSelect={(chat_id) => setSelectedChatId(chat_id)}
+            search={search}
+            setSearch={setSearch}
+            assigned={assigned}
           />
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-400">
-            Selecciona un chat para comenzar
-          </div>
-        )}
-      </main>
+
+
+          {selected ? (
+            <ChatWindow
+              chatName={selected.name}
+              messages={messages}
+              summary={resp?.summary ?? meta?.summary}
+              sendToChatId={selected.id}
+              interactionId={interactionId}
+            />
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-gray-400">
+              Selecciona un chat para comenzar
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
