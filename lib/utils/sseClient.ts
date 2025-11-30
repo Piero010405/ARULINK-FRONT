@@ -8,14 +8,11 @@ type SSEOptions = {
   onError?: (ev: Event, attempt: number) => void;
   onOpen?: () => void;
   withCredentials?: boolean;
-  maxRetries?: number;        // default: Infinity
-  baseDelayMs?: number;       // ms base para backoff
-  maxDelayMs?: number;        // ms tope backoff
+  maxRetries?: number;
+  baseDelayMs?: number;
+  maxDelayMs?: number;
 };
 
-/**
- * SSE resiliente con backoff, heartbeats y señalización de backendOnline.
- */
 export function createSSE(url: string, options: SSEOptions): () => void {
   const {
     onMessage,
@@ -45,20 +42,17 @@ export function createSSE(url: string, options: SSEOptions): () => void {
     };
 
     es.onmessage = (ev) => {
-      // Ignorar heartbeats enviados como ':ping' o data="ping"
       if (!ev.data || ev.data === "ping" || ev.data === ":ping") return;
       onMessage(ev);
     };
 
     es.onerror = (ev) => {
-      // Backend/SSE cayó → marcar offline
-      setBackendOnline(false);
+      setBackendOnline(false); // backend cayó
 
       es?.close();
-
       if (closed) return;
 
-      attempt += 1;
+      attempt++;
 
       onError?.(ev, attempt);
 
@@ -69,7 +63,6 @@ export function createSSE(url: string, options: SSEOptions): () => void {
 
       const delay = Math.min(maxDelayMs, baseDelayMs * 2 ** (attempt - 1));
       console.warn(`SSE(${url}) reconectando en ${delay} ms…`);
-
       setTimeout(connect, delay);
     };
   }

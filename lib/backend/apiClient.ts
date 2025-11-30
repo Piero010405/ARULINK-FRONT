@@ -2,8 +2,8 @@
 import { BACKEND_URL } from "./config";
 import { cookies } from "next/headers";
 import { getAccessToken, clearAccessToken } from "@/lib/utils/token";
-import { safeFetch } from "@/lib/utils/safeFetch";       // CLIENT
-import { safeServerFetch } from "@/lib/utils/safeServerFetch"; // SERVER
+import { safeFetch } from "@/lib/utils/safeFetch";
+import { safeServerFetch } from "@/lib/utils/safeServerFetch";
 
 function isServer() {
   return typeof window === "undefined";
@@ -41,7 +41,7 @@ export async function apiClient<T>(
   const url = `${BACKEND_URL}${endpoint}`;
 
   // ===================================================
-  // 🌐 BROWSER MODE  → safeFetch (reintentos + HTML detect)
+  // 🌐 BROWSER MODE  → safeFetch
   // ===================================================
   if (!isServer()) {
     const res = await safeFetch(url, {
@@ -52,13 +52,11 @@ export async function apiClient<T>(
       timeoutMs: 15000,
     });
 
-    // 401 → token expirado (solo caso crítico)
     if (res.status === 401) {
       clearAccessToken();
       throw new Error("SESSION_EXPIRED");
     }
 
-    // Si el backend está caído → NO romper UI
     if (!res.ok) {
       return { backendDown: true };
     }
@@ -67,19 +65,17 @@ export async function apiClient<T>(
   }
 
   // ===================================================
-  // 🖥 SERVER MODE (Next.js route) → safeServerFetch
+  // 🖥 SERVER MODE → safeServerFetch
   // ===================================================
   const res = await safeServerFetch(url, {
     ...options,
     headers,
   });
 
-  // Server también debe solo lanzar en 401
   if (res.status === 401) {
     throw new Error("SESSION_EXPIRED");
   }
 
-  // Errores 504/500/HTML → backendDown
   if (!res.ok) {
     return { backendDown: true };
   }
