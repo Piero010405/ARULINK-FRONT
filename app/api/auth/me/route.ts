@@ -11,20 +11,25 @@ export async function GET() {
 
   if (!token) {
     return NextResponse.json(
-      { detail: "Not authenticated" },
+      { success: false, detail: "Not authenticated" },
       { status: 401 }
     );
   }
 
-  const data = await apiClient<AsesorInfo>(
+  const result = await apiClient<AsesorInfo>(
     API_BACKEND_ENDPOINTS.AUTH.ME,
     {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
+      headers: { Authorization: `Bearer ${token}` },
     }
   );
-  
-  return NextResponse.json({ user: data });
+
+  if ("backendDown" in result) {
+    return NextResponse.json(
+      { success: false, backend: "down" },
+      { status: 200 }
+    );
+  }
+
+  return NextResponse.json({ success: true, user: result });
 }

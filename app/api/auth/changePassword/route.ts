@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   try {
     const body = (await req.json()) as ChangePasswordRequest;
 
-    const response = await apiClient<{ message: string }>(
+    const result = await apiClient<{ message: string }>(
       API_BACKEND_ENDPOINTS.AUTH.CHANGE_PASSWORD,
       {
         method: "POST",
@@ -16,12 +16,20 @@ export async function POST(req: Request) {
       }
     );
 
-    return NextResponse.json(response, { status: 200 });
+    if ("backendDown" in result) {
+      return NextResponse.json(
+        { success: false, backend: "down" },
+        { status: 200 }
+      );
+    }
 
-  } catch (err) {
+    return NextResponse.json(result, { status: 200 });
+
+  } catch (err: any) {
     return NextResponse.json(
-      { message: "Error changing password" },
-      { status: 400 }
+      { success: false, message: "Error changing password" },
+      { status: 200 }
     );
   }
 }
+

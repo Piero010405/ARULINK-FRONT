@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   try {
     const body = (await req.json()) as RegisterAsesorRequest;
 
-    const response = await apiClient<RegisterAsesorResponse>(
+    const result = await apiClient<RegisterAsesorResponse>(
       API_BACKEND_ENDPOINTS.AUTH.REGISTER,
       {
         method: "POST",
@@ -16,12 +16,19 @@ export async function POST(req: Request) {
       }
     );
 
-    return NextResponse.json(response, { status: 200 });
+    if ("backendDown" in result) {
+      return NextResponse.json(
+        { success: false, backend: "down" },
+        { status: 200 }
+      );
+    }
+
+    return NextResponse.json(result, { status: 200 });
 
   } catch (err) {
     return NextResponse.json(
-      { message: "Error registering asesor" },
-      { status: 400 }
+      { success: false, message: "Error registering asesor" },
+      { status: 200 }
     );
   }
 }

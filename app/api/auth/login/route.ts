@@ -8,33 +8,40 @@ export async function POST(req: Request) {
   try {
     const body = (await req.json()) as LoginRequest;
 
-    // Llamamos a FastAPI usando tu apiClient
-    const backendResponse = await apiClient<TokenResponse>(
+    const result = await apiClient<TokenResponse>(
       API_BACKEND_ENDPOINTS.AUTH.LOGIN,
       {
         method: "POST",
         body: JSON.stringify(body),
       },
-      false
+      false // login NO usa token
     );
 
-    // Guardar token como cookie HTTPOnly
+    if ("backendDown" in result) {
+      return NextResponse.json(
+        { success: false, backend: "down" },
+        { status: 200 }
+      );
+    }
+
+    // result ahora SÍ es TokenResponse
     const res = NextResponse.json(
-      { access_token: backendResponse.access_token },
+      { success: true, access_token: result.access_token },
       { status: 200 }
     );
 
-    res.cookies.set("access_token", backendResponse.access_token, {
+    res.cookies.set("access_token", result.access_token, {
       httpOnly: true,
       path: "/",
     });
 
     return res;
-  
+
   } catch (err: unknown) {
     return NextResponse.json(
-      { message: "Invalid credentials" },
-      { status: 401 },
+      { success: false, message: "Invalid credentials" },
+      { status: 401 }
     );
   }
 }
+

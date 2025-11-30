@@ -5,16 +5,20 @@ import { API_BACKEND_ENDPOINTS } from "@/lib/backend/endpoints";
 
 export async function POST() {
   try {
-    // Llamamos al backend
-    const response = await apiClient<{ message: string }>(
+    const result = await apiClient<{ message: string }>(
       API_BACKEND_ENDPOINTS.AUTH.LOGOUT,
       { method: "POST" }
     );
 
-    // Respuesta para cliente
-    const res = NextResponse.json(response, { status: 200 });
+    if ("backendDown" in result) {
+      return NextResponse.json(
+        { success: false, backend: "down" },
+        { status: 200 }
+      );
+    }
 
-    // Eliminamos cookie
+    const res = NextResponse.json(result, { status: 200 });
+
     res.cookies.set("access_token", "", {
       httpOnly: true,
       expires: new Date(0),
@@ -25,8 +29,8 @@ export async function POST() {
 
   } catch (err) {
     return NextResponse.json(
-      { message: "Logout failed" },
-      { status: 500 }
+      { success: false, message: "Logout failed" },
+      { status: 200 }
     );
   }
 }
