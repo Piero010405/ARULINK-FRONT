@@ -3,24 +3,19 @@
 
 import { useEffect } from "react";
 import { useChatStore } from "../store/chatStore";
-import { ChatsOverviewResponse } from "@/types/chats";
 import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
+import { safeFrontendFetch } from "@/lib/utils/safeFrontendFetch";
 
 export function usePendingChats() {
   const setPending = useChatStore((s) => s.setPending);
 
   async function fetchPending() {
-    try {
-      const res = await fetch(
-        `${API_FRONTEND_ENDPOINTS.CHATS.OVERVIEW}?state=pending`,
-        { cache: "no-store" }
-      );
-      if (!res.ok) return;
+    const result = await safeFrontendFetch(
+      `${API_FRONTEND_ENDPOINTS.CHATS.OVERVIEW}?state=pending`
+    );
 
-      const data: ChatsOverviewResponse = await res.json();
-      if (data.success) setPending(data.data.chats);
-    } catch (err) {
-      console.error("pending error", err);
+    if (result.ok && result.data?.success) {
+      setPending(result.data.data.chats);
     }
   }
 
@@ -30,6 +25,6 @@ export function usePendingChats() {
 
   return {
     pending: useChatStore((s) => s.pending),
-    refresh: fetchPending
+    refresh: fetchPending,
   };
 }

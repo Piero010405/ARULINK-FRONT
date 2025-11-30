@@ -3,51 +3,55 @@
 
 import { useEffect, useState } from "react";
 import { useChatStore } from "../store/chatStore";
-import { MessagesListResponse } from "@/types/chats";
 import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
+import { safeFrontendFetch } from "@/lib/utils/safeFrontendFetch";
 
 export function useChatMessages(interactionId?: string) {
   const setChatMessages = useChatStore((s) => s.setChatMessages);
   const [loading, setLoading] = useState(false);
-  const [resp, setResp] = useState<MessagesListResponse | null>(null);
+  const [resp, setResp] = useState(null);
 
   const fetchMessages = async () => {
     if (!interactionId) {
       setResp(null);
       return;
     }
+
     setLoading(true);
-    try {
-      const res = await fetch(API_FRONTEND_ENDPOINTS.CHATS.INTERACTION(interactionId));
-      if (!res.ok) throw new Error("Failed messages");
-      const data: MessagesListResponse = await res.json();
-      // Key choice: use interactionId as key in store
-      setChatMessages(interactionId, data);
-      setResp(data);
-    } catch (err) {
-      console.error("fetch messages error", err);
+
+    const result = await safeFrontendFetch(
+      API_FRONTEND_ENDPOINTS.CHATS.INTERACTION(interactionId)
+    );
+
+    if (result.ok) {
+      setChatMessages(interactionId, result.data);
+      setResp(result.data);
+    } else {
+      console.warn("fetchMessages failed:", result);
       setResp(null);
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   useEffect(() => {
     fetchMessages();
   }, [interactionId]);
 
-  // expose messages via store (so SSE mutations are reflected)
   const messagesFromStore = useChatStore(
-    (s) => (interactionId ? s.chats[interactionId] : undefined),
+    (s) => (interactionId ? s.chats[interactionId] : undefined)
   );
 
-
-  // meta also from store
   const meta = useChatStore(
     (s) => (interactionId ? s.meta[interactionId] : undefined)
   );
 
-
-  return { messages: messagesFromStore ?? [], loading, refresh: fetchMessages, resp, meta: meta ?? null };
-
+  return {
+    messages: messagesFromStore ?? [],
+    loading,
+    refresh: fetchMessages,
+    resp,
+    meta: meta ?? null,
+  };
 }
+

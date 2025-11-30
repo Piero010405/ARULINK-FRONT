@@ -2,6 +2,7 @@
 "use client";
 import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
 import { useChatStore } from "../store/chatStore";
+import { safeFrontendFetch } from "@/lib/utils/safeFrontendFetch";
 
 export function useAssignChat() {
   const removeFromPending = useChatStore(s => s.removeFromPending);
@@ -11,18 +12,15 @@ export function useAssignChat() {
     if (!interactionId) throw new Error("Missing interaction id");
 
     const endpoint = API_FRONTEND_ENDPOINTS.CHATS.INTERACTION_STATE(interactionId);
-    const res = await fetch(endpoint, {
+
+    const result = await safeFrontendFetch(endpoint, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ state: "derived" }),
     });
 
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error("Failed to assign: " + txt);
-    }
+    if (!result.ok) throw new Error("Failed to assign");
 
-    // update store: remove pending, add to assigned (use item if provided)
     removeFromPending(interactionId);
     if (item) addToAssigned(item);
   }
