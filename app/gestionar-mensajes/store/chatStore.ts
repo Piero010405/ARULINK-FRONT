@@ -51,7 +51,12 @@ interface ChatState {
   removeMessageFromChat: (key: string, id: string) => void;
 
   // ==========================
-  // STREAM (SSE)
+  // DEDUPLICATION
+  // ==========================
+  processedMessageIds: Set<string>;
+
+  // ==========================
+  // STREAM ACTION
   // ==========================
   applyStreamMessage: (msg: AssignedStreamMessage) => void;
 
@@ -70,9 +75,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
   // ====================================================
   pending: [],
   assigned: [],
+  processedMessageIds: new Set(),
 
   setPending: (items) => set({ pending: items }),
-  setAssigned: (items) => set({ assigned: items }),
+  setAssigned: (items) =>
+    set({
+      assigned: items,
+    }),
 
   addToAssigned: (item) =>
     set((s) => ({
@@ -87,7 +96,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
       pending: s.pending.filter((c) => c.interaction_id !== interactionId),
     })),
 
-  // Nuevo método requerido por tus hooks (CORRECTO)
   upsertOverviewItem: (item) =>
     set((s) => {
       const exists = s.assigned.find((c) => c.id === item.id);
@@ -108,31 +116,46 @@ export const useChatStore = create<ChatState>((set, get) => ({
   meta: {},
 
   setChatMessages: (key, resp) =>
-    set((s) => ({
-      chats: {
-        ...s.chats,
-        [key]: resp.messages.map((m) => ({
-          ...m,
-          timestamp:
-            typeof m.timestamp === "number"
-              ? new Date(m.timestamp * 1000).toISOString()
-              : m.timestamp,
-        })),
-      },
-      meta: {
-        ...s.meta,
-        [key]: {
-          chat_id: resp.chat_id,
-          summary: resp.summary,
-          total: resp.total,
-          limit: resp.limit,
-          offset: resp.offset,
+    set((s) => {
+      const messages = resp.messages.map((m) => ({
+        ...m,
+        timestamp:
+          typeof m.timestamp === "number"
+            ? new Date(m.timestamp * 1000).toISOString()
+            : m.timestamp,
+      }));
+
+      // Agregar todos los IDs al set de procesados para evitar duplicación futura
+      const ids = messages.map((m) => m.id);
+      const processedSet = new Set([...s.processedMessageIds, ...ids]);
+
+      return {
+        processedMessageIds: processedSet,
+        chats: {
+          ...s.chats,
+          [key]: messages,
         },
-      },
-    })),
+        meta: {
+          ...s.meta,
+          [key]: {
+            chat_id: resp.chat_id,
+            summary: resp.summary,
+            total: resp.total,
+            limit: resp.limit,
+            offset: resp.offset,
+          },
+        },
+      };
+    }),
 
   addMessageToChat: (key, message) =>
     set((s) => {
+      const msgId = message.id;
+
+      if (s.processedMessageIds.has(msgId)) {
+        return {}; // ❗No duplicar
+      }
+
       const normalized: Message = {
         ...message,
         timestamp:
@@ -142,6 +165,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       };
 
       return {
+        processedMessageIds: new Set([...s.processedMessageIds, msgId]),
         chats: {
           ...s.chats,
           [key]: [...(s.chats[key] ?? []), normalized],
@@ -171,36 +195,37 @@ export const useChatStore = create<ChatState>((set, get) => ({
   // STREAM (SSE)
   // ====================================================
   applyStreamMessage: (msg) => {
+    // ❗ ESTE STREAM YA NO METE MENSAJES EN CHATS
+    // SOLO actualiza overview + notificaciones
+
     const id = msg.interaction_id;
     if (!id) return;
 
-    const newMessage: Message = {
-      id: msg.timestamp.toString(),
-      type: "text",
-      body: msg.body,
-      from: msg.from,
-      from_me: msg.from_me,
-      timestamp: new Date(msg.timestamp * 1000).toISOString(),
-      ack: 0,
-    };
-
-    // Evitar duplicados
-    const existing = get().chats[id] ?? [];
-    if (existing.some((m) => m.id === newMessage.id)) return;
-
-    // Insertar mensaje
-    set((s) => ({
-      chats: {
-        ...s.chats,
-        [id]: [...existing, newMessage],
+    get().upsertOverviewItem({
+      id: msg.chat_id ?? id,
+      name: msg.from ?? "Usuario",
+      interaction_id: id,
+      last_message: {
+        id: msg.timestamp.toString(),
+        body: msg.body,
+        timestamp: new Date(msg.timestamp * 1000).toISOString(),
+        from_me: msg.from_me,
+        ack: 0,
+        type: "text",
       },
-    }));
+      unread_count: 1,
+      type: "individual",
+      archived: false,
+      pinned: false,
+      timestamp: new Date(msg.timestamp * 1000).toISOString(),
+      summary: null,
+      picture_url: null,
+    });
 
-    // Notificación
     get().addNotification({
       id: "notif-" + Date.now(),
       title: "Nuevo mensaje",
-      message: newMessage.body ?? "(sin contenido)",
+      message: msg.body ?? "(sin contenido)",
     });
   },
 

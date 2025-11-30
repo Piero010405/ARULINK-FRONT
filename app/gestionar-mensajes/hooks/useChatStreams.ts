@@ -14,12 +14,12 @@ type StreamMessage = {
   body?: string;
   timestamp?: number;
   message?: any;
+  id?: string;
 };
 
 export function useChatStreams(activeInteractionId?: string) {
   const addMessageToChat = useChatStore((s) => s.addMessageToChat);
 
-  // 🔥 Solo manejamos el stream por interacción.
   useEffect(() => {
     if (!activeInteractionId) return;
 
@@ -31,32 +31,32 @@ export function useChatStreams(activeInteractionId?: string) {
       onMessage: (ev) => {
         try {
           const parsed = JSON.parse(ev.data) as StreamMessage;
-          if (parsed.type === "message") {
-            const key = parsed.interaction_id ?? activeInteractionId;
-            const msg =
-              parsed.message ?? {
-                id: `${Date.now()}`,
-                body: parsed.body,
-                timestamp: parsed.timestamp ?? Date.now(),
-                from_me: false,
-                type: "text",
-                from: parsed.from ?? null,
-              };
 
-            if (!key) return;
+          if (parsed.type !== "message") return;
 
-            addMessageToChat(key, {
-              id: msg.id ?? `${Date.now()}`,
-              body: msg.body ?? parsed.body,
-              timestamp:
-                typeof msg.timestamp === "number"
-                  ? new Date(msg.timestamp * 1000).toISOString()
-                  : msg.timestamp ?? new Date().toISOString(),
-              from_me: !!msg.from_me,
-              type: msg.type ?? "text",
-              from: msg.from ?? parsed.from ?? null,
-            });
-          }
+          const key = parsed.interaction_id ?? activeInteractionId;
+
+          // Message ID robusto
+          const messageId =
+            parsed.id ??
+            parsed.message?.id ??
+            parsed.timestamp?.toString() ??
+            crypto.randomUUID();
+
+          const msgBody = parsed.message?.body ?? parsed.body;
+
+          addMessageToChat(key, {
+            id: messageId,
+            body: msgBody,
+            timestamp:
+              typeof parsed.timestamp === "number"
+                ? new Date(parsed.timestamp * 1000).toISOString()
+                : new Date().toISOString(),
+            from_me: parsed.message?.from_me ?? false,
+            type: parsed.message?.type ?? "text",
+            from: parsed.message?.from ?? parsed.from ?? null,
+            ack: 0,
+          });
         } catch (err) {
           console.warn("InteractionStream: JSON parse error", err);
         }
@@ -73,9 +73,7 @@ export function useChatStreams(activeInteractionId?: string) {
       maxRetries: Infinity,
     });
 
-    return () => {
-      stop();
-    };
+    return () => stop();
   }, [activeInteractionId, addMessageToChat]);
 
   return {};

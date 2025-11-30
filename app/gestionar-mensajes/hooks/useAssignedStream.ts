@@ -17,6 +17,7 @@ export function useAssignedStream() {
 
         try {
           const msg: AssignedStreamMessage = JSON.parse(e.data);
+
           if (msg.type === "message") {
             applyStreamMessage(msg);
           }
@@ -25,10 +26,7 @@ export function useAssignedStream() {
         }
       },
       onError: (ev, attempt) => {
-        console.warn(
-          `AssignedStream SSE error (attempt ${attempt})`,
-          ev
-        );
+        console.warn(`AssignedStream SSE error (attempt ${attempt})`, ev);
       },
       onOpen: () => {
         console.info("AssignedStream SSE conectado");
@@ -36,8 +34,6 @@ export function useAssignedStream() {
       maxRetries: Infinity,
     });
 
-    return () => {
-      stop();
-    };
+    return () => stop();
   }, [applyStreamMessage]);
 }

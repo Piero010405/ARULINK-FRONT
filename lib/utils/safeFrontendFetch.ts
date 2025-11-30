@@ -20,7 +20,11 @@ export async function safeFrontendFetch(
 ): Promise<SafeFrontendResult> {
   let attempt = 0;
 
-  while (attempt <= retries) {
+  // ❗POST no debe reintentarse jamás
+  let retryCount =
+    options.method?.toUpperCase() === "POST" ? 0 : retries;
+
+  while (attempt <= retryCount) {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000);
@@ -39,32 +43,28 @@ export async function safeFrontendFetch(
       try {
         text = await res.text();
       } catch {
-        // Protección si la response no tiene body
         return { ok: false, status, data: null };
       }
 
-      // Si recibe HTML → error controlado (Cloudflare)
       if (isHtml(text)) {
-        console.warn("⚠ safeFrontendFetch: HTML detectado (Cloudflare/504):", text);
-        if (attempt === retries)
+        console.warn("⚠ safeFrontendFetch: HTML detectado:", text);
+        if (attempt === retryCount)
           return { ok: false, status, data: null };
         attempt++;
         continue;
       }
 
-      // Intentar parsear JSON
       let json = null;
       try {
         json = text ? JSON.parse(text) : null;
       } catch {
         console.warn("⚠ safeFrontendFetch: JSON inválido:", text);
-        if (attempt === retries)
+        if (attempt === retryCount)
           return { ok: false, status, data: null };
         attempt++;
         continue;
       }
 
-      // Sesión expirada
       if (status === 401 && text.includes("SESSION_EXPIRED")) {
         clearAccessToken();
         return { ok: false, status, data: { sessionExpired: true } };
@@ -75,15 +75,13 @@ export async function safeFrontendFetch(
       }
 
       return { ok: true, status, data: json };
-
     } catch (err) {
-      console.warn("⚠ safeFrontendFetch error:", err);
-      if (attempt === retries)
+      if (attempt === retryCount)
         return { ok: false, status: 0, data: null };
     }
 
     attempt++;
-    await new Promise(res => setTimeout(res, 300 * attempt));
+    await new Promise((res) => setTimeout(res, 300 * attempt));
   }
 
   return { ok: false, status: 0, data: null };
