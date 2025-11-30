@@ -68,7 +68,7 @@ export interface Message {
   timestamp: string;
   from_me: boolean;
   type: MessageType;
-  from: string;
+  from: string | null;
   ack?: MessageAck;
 }
 
