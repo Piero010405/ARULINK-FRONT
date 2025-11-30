@@ -10,26 +10,32 @@ export async function GET() {
   const token = cookieStore.get("access_token")?.value;
 
   if (!token) {
-    return NextResponse.json(
-      { success: false, detail: "Not authenticated" },
-      { status: 401 }
-    );
+    return NextResponse.json({ detail: "Not authenticated" }, { status: 401 });
   }
 
-  const result = await apiClient<AsesorInfo>(
-    API_BACKEND_ENDPOINTS.AUTH.ME,
-    {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
+  try {
+    const result = await apiClient<AsesorInfo>(
+      API_BACKEND_ENDPOINTS.AUTH.ME,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    if ("backendDown" in result) {
+      return NextResponse.json({ backend: "down" }, { status: 503 });
     }
-  );
 
-  if ("backendDown" in result) {
-    return NextResponse.json(
-      { success: false, backend: "down" },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, user: result });
+
+  } catch (err: any) {
+
+    // 🔥🔥🔥 AQUI ESTA LO IMPORTANTE
+    if (err.message === "SESSION_EXPIRED") {
+      return NextResponse.json({ detail: "session expired" }, { status: 401 });
+    }
+
+    return NextResponse.json({ detail: "internal", error: err.message }, { status: 500 });
   }
-
-  return NextResponse.json({ success: true, user: result });
 }
+
