@@ -13,14 +13,15 @@ export async function apiClient<T>(
   endpoint: string,
   options: RequestInit = {},
   useAuth: boolean = true
-): Promise<T> {
+): Promise<T | { backendDown: true }> {
+
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
 
   // ======================
-  // TOKEN
+  // LOAD TOKEN
   // ======================
   let token: string | undefined;
 
@@ -32,14 +33,16 @@ export async function apiClient<T>(
       token = getAccessToken() ?? undefined;
     }
 
-    if (token) headers["Authorization"] = `Bearer ${token}`;
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
   }
 
   const url = `${BACKEND_URL}${endpoint}`;
 
-  // ======================
-  // CLIENT MODE (Browser)
-  // ======================
+  // ===================================================
+  // 🌐 BROWSER MODE  → safeFetch (reintentos + HTML detect)
+  // ===================================================
   if (!isServer()) {
     const res = await safeFetch(url, {
       ...options,
@@ -49,25 +52,36 @@ export async function apiClient<T>(
       timeoutMs: 15000,
     });
 
+    // 401 → token expirado (solo caso crítico)
+    if (res.status === 401) {
+      clearAccessToken();
+      throw new Error("SESSION_EXPIRED");
+    }
+
+    // Si el backend está caído → NO romper UI
     if (!res.ok) {
-      if (res.status === 401) throw new Error("SESSION_EXPIRED");
-      throw new Error(`API_ERROR_${res.status}`);
+      return { backendDown: true };
     }
 
     return res.data as T;
   }
 
-  // ======================
-  // SERVER MODE (Next.js route/SSR)
-  // ======================
+  // ===================================================
+  // 🖥 SERVER MODE (Next.js route) → safeServerFetch
+  // ===================================================
   const res = await safeServerFetch(url, {
     ...options,
     headers,
   });
 
+  // Server también debe solo lanzar en 401
+  if (res.status === 401) {
+    throw new Error("SESSION_EXPIRED");
+  }
+
+  // Errores 504/500/HTML → backendDown
   if (!res.ok) {
-    if (res.status === 401) throw new Error("SESSION_EXPIRED");
-    throw new Error(`API_ERROR_${res.status}`);
+    return { backendDown: true };
   }
 
   return res.data as T;

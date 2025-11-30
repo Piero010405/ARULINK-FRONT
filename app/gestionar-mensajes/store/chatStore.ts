@@ -51,12 +51,18 @@ interface ChatState {
   removeMessageFromChat: (key: string, id: string) => void;
 
   // ==========================
-  // DEDUPLICATION
+  // DEDUP
   // ==========================
   processedMessageIds: Set<string>;
 
   // ==========================
-  // STREAM ACTION
+  // BACKEND STATUS
+  // ==========================
+  isBackendOnline: boolean;
+  setBackendOnline: (v: boolean) => void;
+
+  // ==========================
+  // STREAM (SSE)
   // ==========================
   applyStreamMessage: (msg: AssignedStreamMessage) => void;
 
@@ -78,10 +84,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   processedMessageIds: new Set(),
 
   setPending: (items) => set({ pending: items }),
-  setAssigned: (items) =>
-    set({
-      assigned: items,
-    }),
+  setAssigned: (items) => set({ assigned: items }),
 
   addToAssigned: (item) =>
     set((s) => ({
@@ -99,7 +102,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
   upsertOverviewItem: (item) =>
     set((s) => {
       const exists = s.assigned.find((c) => c.id === item.id);
-
       return exists
         ? {
             assigned: s.assigned.map((c) =>
@@ -125,7 +127,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
             : m.timestamp,
       }));
 
-      // Agregar todos los IDs al set de procesados para evitar duplicación futura
       const ids = messages.map((m) => m.id);
       const processedSet = new Set([...s.processedMessageIds, ...ids]);
 
@@ -151,10 +152,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   addMessageToChat: (key, message) =>
     set((s) => {
       const msgId = message.id;
-
-      if (s.processedMessageIds.has(msgId)) {
-        return {}; // ❗No duplicar
-      }
+      if (s.processedMessageIds.has(msgId)) return {};
 
       const normalized: Message = {
         ...message,
@@ -192,12 +190,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     })),
 
   // ====================================================
-  // STREAM (SSE)
+  // BACKEND ONLINE / OFFLINE
+  // ====================================================
+  isBackendOnline: true,
+  setBackendOnline: (v) => set({ isBackendOnline: v }),
+
+  // ====================================================
+  // STREAM (solo overview)
   // ====================================================
   applyStreamMessage: (msg) => {
-    // ❗ ESTE STREAM YA NO METE MENSAJES EN CHATS
-    // SOLO actualiza overview + notificaciones
-
     const id = msg.interaction_id;
     if (!id) return;
 
