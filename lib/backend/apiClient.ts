@@ -1,7 +1,8 @@
-// lib/backend/apiClient.ts
+// src/lib/backend/apiClient.ts
 import { BACKEND_URL } from "./config";
 import { cookies } from "next/headers";
 import { getAccessToken, clearAccessToken } from "@/lib/utils/token";
+import { safeFetch } from "@/lib/utils/safeFetch";
 
 function isServer() {
   return typeof window === "undefined";
@@ -17,11 +18,11 @@ export async function apiClient<T>(
     ...(options.headers as Record<string, string>),
   };
 
-  // ================================
-  // 1. Cargar token
-  // ================================
   let token: string | undefined;
 
+  // ============================
+  // 1. Token
+  // ============================
   if (useAuth) {
     if (isServer()) {
       const cookieStore = await cookies();
@@ -30,39 +31,34 @@ export async function apiClient<T>(
       token = getAccessToken() ?? undefined;
     }
 
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
+    if (token) headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // ================================
-  // 2. Request
-  // ================================
-  const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+  // ============================
+  // 2. safeFetch (blindado)
+  // ============================
+  const res = await safeFetch(`${BACKEND_URL}${endpoint}`, {
     ...options,
     headers,
-    cache: "no-store",
+    retries: 2,
+    retryDelay: 400,
+    timeoutMs: 15000,
   });
 
-  // ================================
-  // 3. Manejo de errores
-  // ================================
-  if (!response.ok) {
-    const text = await response.text();
-
-    // ⭐ Detectar token expirado
-    if (response.status === 401 && text.includes("Token expirado")) {
-      console.warn("⚠️ Token expirado detectado.");
-
-      if (!isServer()) {
-        clearAccessToken();
-      }
-
-      throw new Error("SESSION_EXPIRED"); // Señal al front
-    }
-
-    throw new Error(`Error ${response.status}: ${text}`);
+  // ============================
+  // 3. Manejo seguro
+  // ============================
+  if (res.ok) {
+    return res.data as T;
   }
 
-  return response.json() as Promise<T>;
+  // Token expirado (safeFetch ya limpió)
+  if (res.status === 401) {
+    throw new Error("SESSION_EXPIRED");
+  }
+
+  // Error controlado
+  console.warn("apiClient error response:", res);
+
+  throw new Error(`API_ERROR_${res.status}`);
 }
