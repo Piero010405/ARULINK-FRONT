@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { Loader } from "@/components/ui/Loader";
+import Image from 'next/image';
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -36,7 +37,14 @@ export default function LoginForm() {
         {/* Panel rojo izquierdo */}
         <div className="hidden md:flex md:w-1/2 h-full bg-red-700 items-center justify-center p-12">
           <div className="text-center">
-            <img src="/Arulink.jpg" alt="logo" className="mx-auto h-28 w-28 rounded-full object-cover mb-6" />
+            <Image
+              src="/arulink.png" // Ruta corregida
+              alt="logo"
+              width={112} // 7rem * 16px/rem = 112px (para h-28 w-28)
+              height={112}
+              className="mx-auto h-28 w-28 rounded-full object-cover mb-6 bg-white"
+              priority // Opcional: para que cargue inmediatamente
+            />
             <h2 className="text-white text-3xl font-semibold mb-2">Arulink & Gobierno del Perú</h2>
             <p className="text-red-100 text-sm max-w-xs mx-auto">
               Oficina Pública Defensora - Condorcanqui
