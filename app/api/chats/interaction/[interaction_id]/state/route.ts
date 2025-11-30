@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 import { API_BACKEND_ENDPOINTS } from "@/lib/backend/endpoints";
 import { UpdateInteractionStateResponse } from "@/types/chats";
 
-export async function PATCH(request: Request, { params }: { params: { interaction_id: string } }) {
-  const { interaction_id } = params;
+export async function PATCH(request: Request, context: { params: { interaction_id: string } }) {
+  const { interaction_id } = context.params;
   const body = await request.json();
 
   const result = await apiClient<UpdateInteractionStateResponse>(

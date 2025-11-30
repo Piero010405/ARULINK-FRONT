@@ -4,9 +4,10 @@ import { apiClient } from "@/lib/backend/apiClient";
 import { API_BACKEND_ENDPOINTS } from "@/lib/backend/endpoints";
 import { SendMessageResponse } from "@/types/chats";
 
-export async function POST(req: Request, { params }: { params: { chat_id: string } }) {
+export async function POST(req: Request, context: { params: { chat_id: string } }
+) {
   try {
-    const { chat_id } = params;
+    const { chat_id } = await context.params;
     const body = await req.json();
 
     const result = await apiClient<SendMessageResponse>(

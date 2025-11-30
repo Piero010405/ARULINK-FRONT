@@ -4,9 +4,13 @@ import { apiClient } from "@/lib/backend/apiClient";
 import { API_BACKEND_ENDPOINTS } from "@/lib/backend/endpoints";
 import { MessagesListResponse } from "@/types/chats";
 
-export async function GET(req: Request, { params }: { params: { interaction_id: string } }) {
+export async function GET(
+  req: Request,
+  context: { params: { interaction_id: string } }
+) {
   try {
-    const { interaction_id } = params;
+    // ❗ FIX: params is a Promise → await it
+    const { interaction_id } = await context.params;
 
     const result = await apiClient<MessagesListResponse>(
       API_BACKEND_ENDPOINTS.CHATS.GET_INTERACTION_BY_ID(interaction_id),
@@ -30,4 +34,3 @@ export async function GET(req: Request, { params }: { params: { interaction_id: 
     );
   }
 }
-
