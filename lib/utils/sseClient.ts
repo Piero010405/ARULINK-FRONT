@@ -1,18 +1,20 @@
 // src/lib/utils/sseClient.ts
+"use client";
+
+import { useChatStore } from "@/app/gestionar-mensajes/store/chatStore";
 
 type SSEOptions = {
   onMessage: (ev: MessageEvent) => void;
   onError?: (ev: Event, attempt: number) => void;
   onOpen?: () => void;
   withCredentials?: boolean;
-  maxRetries?: number;          // por defecto infinito
-  baseDelayMs?: number;         // inicio del backoff
-  maxDelayMs?: number;          // tope máximo de backoff
+  maxRetries?: number;        // default: Infinity
+  baseDelayMs?: number;       // ms base para backoff
+  maxDelayMs?: number;        // ms tope backoff
 };
 
 /**
- * Crea una conexión SSE resiliente con reconexión exponencial.
- * Devuelve una función de "stop" para cerrar la conexión desde React useEffect.
+ * SSE resiliente con backoff, heartbeats y señalización de backendOnline.
  */
 export function createSSE(url: string, options: SSEOptions): () => void {
   const {
@@ -25,33 +27,39 @@ export function createSSE(url: string, options: SSEOptions): () => void {
     maxDelayMs = 30000,
   } = options;
 
+  const { setBackendOnline } = useChatStore.getState();
+
   let es: EventSource | null = null;
   let closed = false;
   let attempt = 0;
 
-  const connect = () => {
+  function connect() {
     if (closed) return;
 
     es = new EventSource(url, { withCredentials });
 
     es.onopen = () => {
-      attempt = 0; // reset al conectarse bien
+      attempt = 0;
+      setBackendOnline(true);
       onOpen?.();
     };
 
     es.onmessage = (ev) => {
-      // Algunos backends envían heartbeats tipo ":ping"
-      if (!ev.data || ev.data === "ping") return;
-
+      // Ignorar heartbeats enviados como ':ping' o data="ping"
+      if (!ev.data || ev.data === "ping" || ev.data === ":ping") return;
       onMessage(ev);
     };
 
     es.onerror = (ev) => {
+      // Backend/SSE cayó → marcar offline
+      setBackendOnline(false);
+
       es?.close();
 
       if (closed) return;
 
       attempt += 1;
+
       onError?.(ev, attempt);
 
       if (attempt > maxRetries) {
@@ -60,18 +68,17 @@ export function createSSE(url: string, options: SSEOptions): () => void {
       }
 
       const delay = Math.min(maxDelayMs, baseDelayMs * 2 ** (attempt - 1));
+      console.warn(`SSE(${url}) reconectando en ${delay} ms…`);
 
-      setTimeout(() => {
-        connect();
-      }, delay);
+      setTimeout(connect, delay);
     };
-  };
+  }
 
   connect();
 
-  // cleanup
   return () => {
     closed = true;
+    setBackendOnline(false);
     es?.close();
   };
 }
