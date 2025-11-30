@@ -5,41 +5,37 @@ import { useState } from "react";
 import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
 import { safeFrontendFetch } from "@/lib/utils/safeFrontendFetch";
 import { useChatStore } from "../store/chatStore";
-import { Message } from "@/types/chats";
+import type { Message } from "@/types/chats";
 
 export function useSendMessage() {
   const [loading, setLoading] = useState(false);
 
-  // Acciones del store para actualizar el chat
-  const addMessageToChat = useChatStore((s) => s.addMessageToChat);
-  const updateMessageInChat = useChatStore((s) => s.updateMessageInChat);
+  // setters directos del store (NO crean loops)
+  const addMessageToChat = useChatStore.getState().addMessageToChat;
+  const updateMessageInChat = useChatStore.getState().updateMessageInChat;
 
-  async function send(chatId: string, text: string) {
+  async function send(chatId: string, interactionId: string, text: string) {
     const body = text.trim();
-    if (!chatId || !body) return;
+    if (!chatId || !interactionId || !body) return;
 
     const tempId = `temp-${Date.now()}`;
 
-    // ================================
-    // 1. Mensaje optimista en la UI
-    // ================================
-    const optimisticMessage: Message = {
+    // 1) OPTIMISTIC UPDATE — se agrega instantáneamente
+    const optimisticMsg: Message = {
       id: tempId,
       body,
       type: "text",
-      from: null, // desconocido / nosotros mismos
       from_me: true,
+      from: null,
       timestamp: new Date().toISOString(),
-      ack: 0, // 0 = enviando
+      ack: 0, // “enviando…”
     };
 
-    addMessageToChat(chatId, optimisticMessage);
+    addMessageToChat(interactionId, optimisticMsg);
 
-    // ================================
-    // 2. Llamada real al backend
-    //    ❗ retries = 0 para NO duplicar
-    // ================================
+    // 2) Llamada real (sin retries para evitar duplicados)
     setLoading(true);
+
     try {
       const result = await safeFrontendFetch(
         API_FRONTEND_ENDPOINTS.CHATS.CHAT_MESSAGES(chatId),
@@ -48,43 +44,33 @@ export function useSendMessage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ type: "text", message: body }),
         },
-        0 // 🔥 SIN reintentos en POST para evitar mensajes duplicados
+        0
       );
 
       setLoading(false);
 
       if (!result.ok) {
-        // marcar como fallido en UI
-        updateMessageInChat(chatId, tempId, { ack: -1 });
-        throw new Error("Error al enviar mensaje");
+        updateMessageInChat(interactionId, tempId, { ack: -1 }); // error
+        return;
       }
 
-      // ================================
-      // 3. Actualizar mensaje optimista
-      //    con info real (si viene)
-      // ================================
-      const serverMsg: any = result.data?.message;
+      const server = result.data?.message;
 
-      if (serverMsg && serverMsg.id) {
-        updateMessageInChat(chatId, tempId, {
-          id: serverMsg.id,
+      if (server && server.id) {
+        updateMessageInChat(interactionId, tempId, {
+          id: server.id,
           timestamp:
-            typeof serverMsg.timestamp === "number"
-              ? new Date(serverMsg.timestamp * 1000).toISOString()
-              : serverMsg.timestamp ?? optimisticMessage.timestamp,
-          ack: serverMsg.ack ?? 2, // 2 = delivered
+            typeof server.timestamp === "number"
+              ? new Date(server.timestamp * 1000).toISOString()
+              : server.timestamp,
+          ack: server.ack ?? 2,
         });
       } else {
-        // si el backend no manda objeto message, al menos marcamos como enviado
-        updateMessageInChat(chatId, tempId, { ack: 2 });
+        updateMessageInChat(interactionId, tempId, { ack: 2 });
       }
-
-      return result.data;
     } catch (err) {
       setLoading(false);
-      // Si algo revienta (network, etc.) → marcar como fallido
-      updateMessageInChat(chatId, tempId, { ack: -1 });
-      throw err;
+      updateMessageInChat(interactionId, tempId, { ack: -1 });
     }
   }
 

@@ -1,21 +1,26 @@
 // app/gestionar-mensajes/components/PendingChatsPanel.tsx
 "use client";
+
 import { useAssignChat } from "../hooks/useAssignChat";
 import { ChatOverviewItem } from "@/types/chats";
 import { Loader } from "@/components/ui/Loader";
 
-export function PendingChatsPanel({ pending }: { pending: ChatOverviewItem[] }) {
+interface Props {
+  pending: ChatOverviewItem[];
+}
+
+export function PendingChatsPanel({ pending }: Props) {
   if (!pending) return <Loader />;
+
   const { assign } = useAssignChat();
 
   if (!pending || pending.length === 0) return null;
 
   return (
     <div className="flex gap-3 overflow-x-auto no-scrollbar py-1">
-      {pending.map((item) => {
+      {pending.map((item: ChatOverviewItem) => {
         const key = item.interaction_id ?? item.id ?? item.name;
-        
-        // FIX: last_message puede ser string o un objeto del backend
+
         const lastMessageText =
           typeof item.last_message === "string"
             ? item.last_message
@@ -27,7 +32,9 @@ export function PendingChatsPanel({ pending }: { pending: ChatOverviewItem[] }) 
             className="min-w-[260px] bg-white border rounded-lg shadow-sm p-3 flex flex-col"
           >
             <div className="font-semibold">{item.name}</div>
-            <div className="text-sm text-gray-500">ID: {item.interaction_id}</div>
+            <div className="text-sm text-gray-500">
+              ID: {item.interaction_id}
+            </div>
 
             <div className="text-sm text-gray-500">
               Último: {lastMessageText}

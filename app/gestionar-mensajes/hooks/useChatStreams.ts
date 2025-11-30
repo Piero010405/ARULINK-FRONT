@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useChatStore } from "../store/chatStore";
 import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
 import { createSSE } from "@/lib/utils/sseClient";
+import { Message } from "@/types/chats";
 
 type StreamMessage = {
   type: string;
@@ -12,13 +13,13 @@ type StreamMessage = {
   chat_id?: string;
   from?: string | null;
   body?: string;
-  timestamp?: number;
+  timestamp?: number; // siempre segundos
   message?: any;
   id?: string;
 };
 
-export function useChatStreams(activeInteractionId?: string) {
-  const addMessageToChat = useChatStore((s) => s.addMessageToChat);
+export function useChatStreams(activeInteractionId?: string | null) {
+  const addMessageToChat = useChatStore.getState().addMessageToChat;
 
   useEffect(() => {
     if (!activeInteractionId) return;
@@ -31,50 +32,42 @@ export function useChatStreams(activeInteractionId?: string) {
       onMessage: (ev) => {
         try {
           const parsed = JSON.parse(ev.data) as StreamMessage;
-
           if (parsed.type !== "message") return;
 
+          if (parsed.message?.from_me === true) return;
+
           const key = parsed.interaction_id ?? activeInteractionId;
+          if (!key) return;
 
-          // Message ID robusto
-          const messageId =
-            parsed.id ??
-            parsed.message?.id ??
-            parsed.timestamp?.toString() ??
-            crypto.randomUUID();
+          const tsSeconds =
+            typeof parsed.timestamp === "number"
+              ? parsed.timestamp
+              : Math.floor(Date.now() / 1000);
 
-          const msgBody = parsed.message?.body ?? parsed.body;
+          const msg: Message = {
+            id:
+              parsed.id ??
+              parsed.message?.id ??
+              crypto.randomUUID(),
 
-          addMessageToChat(key, {
-            id: messageId,
-            body: msgBody,
-            timestamp:
-              typeof parsed.timestamp === "number"
-                ? new Date(parsed.timestamp * 1000).toISOString()
-                : new Date().toISOString(),
-            from_me: parsed.message?.from_me ?? false,
+            body: parsed.message?.body ?? parsed.body ?? "",
+
+            // corrige 57885
+            timestamp: new Date(tsSeconds * 1000).toISOString(),
+
+            from_me: false,
             type: parsed.message?.type ?? "text",
             from: parsed.message?.from ?? parsed.from ?? null,
             ack: 0,
-          });
+          };
+
+          addMessageToChat(key, msg);
         } catch (err) {
           console.warn("InteractionStream: JSON parse error", err);
         }
       },
-      onError: (ev, attempt) => {
-        console.warn(
-          `InteractionStream SSE error (interaction=${activeInteractionId}, attempt=${attempt})`,
-          ev
-        );
-      },
-      onOpen: () => {
-        console.info("InteractionStream SSE conectado:", activeInteractionId);
-      },
-      maxRetries: Infinity,
     });
 
     return () => stop();
   }, [activeInteractionId, addMessageToChat]);
-
-  return {};
 }

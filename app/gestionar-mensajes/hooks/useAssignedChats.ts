@@ -6,8 +6,12 @@ import { useChatStore } from "../store/chatStore";
 import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
 import { safeFrontendFetch } from "@/lib/utils/safeFrontendFetch";
 
+// ❗ función selector memoizable (NO engancha setters)
+const selectAssigned = (s: any) => s.assigned;
+
 export function useAssignedChats() {
-  const setAssigned = useChatStore((s) => s.setAssigned);
+  // setter estable (NO suscribe)
+  const setAssigned = useChatStore.getState().setAssigned;
 
   async function fetchAssigned() {
     const result = await safeFrontendFetch(
@@ -23,8 +27,8 @@ export function useAssignedChats() {
     fetchAssigned();
   }, []);
 
-  return {
-    assigned: useChatStore((s) => s.assigned),
-    refresh: fetchAssigned,
-  };
+  // lectura segura del store (SIN setter)
+  const assigned = useChatStore(selectAssigned);
+
+  return { assigned, refresh: fetchAssigned };
 }

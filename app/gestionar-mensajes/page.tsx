@@ -1,7 +1,7 @@
 // app/gestionar-mensajes/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import ChatHeader from "./components/ChatHeader";
 import ChatsSidebar from "./components/ChatsSidebar";
 import ChatWindow from "./components/ChatWindow";
@@ -12,59 +12,54 @@ import { useChatStreams } from "./hooks/useChatStreams";
 import { PendingChatsPanel } from "./components/PendingChatsPanel";
 import { useAssignedStream } from "./hooks/useAssignedStream";
 import { FloatingNotifications } from "./components/FloatingNotifications";
+import { ChatOverviewItem } from "@/types/chats";
 
 export default function GestionarMensajes() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  // 🔥 Nuevos hooks: eliminas useChatsOverview
   const { pending } = usePendingChats();
   const { assigned } = useAssignedChats();
 
-  // Buscar el seleccionado ENTRE LOS ASIGNADOS
-  const selected = assigned.find((c) => c.id === selectedChatId) || null;
+  const selected: ChatOverviewItem | null = useMemo(
+    () => assigned.find((c: ChatOverviewItem) => c.id === selectedChatId) ?? null,
+    [assigned, selectedChatId]
+  );
 
-  // interaction_id viene solo de assigned
-  const interactionId = selected?.interaction_id ?? undefined;
+  const interactionId = selected?.interaction_id ?? null;
 
-  // obtener mensajes por interaction_id
-  const { messages, resp, meta } = useChatMessages(interactionId);
+  // Side-effect: carga mensajes en el store
+  useChatMessages(interactionId);
 
-  // suscribir SSE por interaction_id
+  // Streams
   useChatStreams(interactionId);
-  useAssignedStream(); 
+  useAssignedStream();
 
   return (
     <div className="h-full w-full">
       <FloatingNotifications />
       <div className="h-screen w-screen flex flex-col overflow-hidden">
-
         <ChatHeader />
 
-        {/* ANUNCIOS HORIZONTALES DE CHATS PENDIENTES */}
         <div className="bg-white border-b px-4 py-2">
           <PendingChatsPanel pending={pending} />
         </div>
 
         <main className="flex grow bg-gray-100 overflow-hidden">
-
-          {/* SIDEBAR: usa los assigned */}
           <ChatsSidebar
             selected={selectedChatId}
-            onSelect={(chat_id) => setSelectedChatId(chat_id)}
+            onSelect={setSelectedChatId}
             search={search}
             setSearch={setSearch}
             assigned={assigned}
           />
 
-
           {selected ? (
             <ChatWindow
               chatName={selected.name}
-              messages={messages}
-              summary={resp?.summary ?? meta?.summary}
-              sendToChatId={selected.id}
-              interactionId={interactionId}
+              interactionId={selected.interaction_id}
+              chatId={selected.id}
+              summary={selected.summary ?? undefined}
             />
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-400">

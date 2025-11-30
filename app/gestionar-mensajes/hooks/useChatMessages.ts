@@ -1,57 +1,43 @@
 // app/gestionar-mensajes/hooks/useChatMessages.ts
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useChatStore } from "../store/chatStore";
 import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
 import { safeFrontendFetch } from "@/lib/utils/safeFrontendFetch";
 
-export function useChatMessages(interactionId?: string) {
-  const setChatMessages = useChatStore((s) => s.setChatMessages);
-  const [loading, setLoading] = useState(false);
-  const [resp, setResp] = useState(null);
+export function useChatMessages(interactionId?: string | null) {
 
-  const fetchMessages = async () => {
-    if (!interactionId) {
-      setResp(null);
-      return;
-    }
-
-    setLoading(true);
-
-    const result = await safeFrontendFetch(
-      API_FRONTEND_ENDPOINTS.CHATS.INTERACTION(interactionId)
-    );
-
-    if (result.ok) {
-      setChatMessages(interactionId, result.data);
-      setResp(result.data);
-    } else {
-      console.warn("fetchMessages failed:", result);
-      setResp(null);
-    }
-
-    setLoading(false);
-  };
+  // Setter estable — no reactivo
+  const setChatMessages = useChatStore.getState().setChatMessages;
 
   useEffect(() => {
-    fetchMessages();
-  }, [interactionId]);
+    // no interaction id → limpiar mensajes del chat anterior
+    if (!interactionId) return;
 
-  const messagesFromStore = useChatStore(
-    (s) => (interactionId ? s.chats[interactionId] : undefined)
-  );
+    let active = true;
+    const id = interactionId; // ya es string
 
-  const meta = useChatStore(
-    (s) => (interactionId ? s.meta[interactionId] : undefined)
-  );
+    async function load() {
+      const result = await safeFrontendFetch(
+        API_FRONTEND_ENDPOINTS.CHATS.INTERACTION(id)
+      );
 
-  return {
-    messages: messagesFromStore ?? [],
-    loading,
-    refresh: fetchMessages,
-    resp,
-    meta: meta ?? null,
-  };
+      if (!active) return;
+      if (!result.ok) {
+        console.warn("⚠ fetchMessages failed:", result);
+        return;
+      }
+
+      // GUARDA LOS MENSAJES
+      setChatMessages(id, result.data);
+    }
+
+    load();
+
+    return () => {
+      active = false;
+    };
+
+  }, [interactionId]);  // solo depende de interactionId
 }
-

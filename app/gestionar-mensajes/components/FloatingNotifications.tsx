@@ -5,8 +5,8 @@ import { useChatStore } from "../store/chatStore";
 import { useEffect } from "react";
 
 export function FloatingNotifications() {
-  const notifications = useChatStore(s => s.notifications);
-  const remove = useChatStore(s => s.removeNotification);
+  const notifications = useChatStore((s) => s.notifications);
+  const remove = useChatStore((s) => s.removeNotification);
 
   useEffect(() => {
     const timers = notifications.map((n) =>
@@ -14,7 +14,7 @@ export function FloatingNotifications() {
     );
 
     return () => timers.forEach(clearTimeout);
-  }, [notifications]);
+  }, [notifications, remove]);
 
   return (
     <div className="fixed top-4 right-4 space-y-2 z-50">

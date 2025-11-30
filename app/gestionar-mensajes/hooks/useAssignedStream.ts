@@ -8,7 +8,7 @@ import { createSSE } from "@/lib/utils/sseClient";
 import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
 
 export function useAssignedStream() {
-  const applyStreamMessage = useChatStore((s) => s.applyStreamMessage);
+  const applyStreamMessage = useChatStore.getState().applyStreamMessage;
 
   useEffect(() => {
     const stop = createSSE(API_FRONTEND_ENDPOINTS.CHATS.STREAM_ASSIGNED, {
@@ -17,19 +17,12 @@ export function useAssignedStream() {
 
         try {
           const msg: AssignedStreamMessage = JSON.parse(e.data);
-
           if (msg.type === "message") {
             applyStreamMessage(msg);
           }
-        } catch (err) {
-          console.warn("AssignedStream: JSON parse error", err);
+        } catch {
+          console.warn("AssignedStream JSON parse error");
         }
-      },
-      onError: (ev, attempt) => {
-        console.warn(`AssignedStream SSE error (attempt ${attempt})`, ev);
-      },
-      onOpen: () => {
-        console.info("AssignedStream SSE conectado");
       },
       maxRetries: Infinity,
     });

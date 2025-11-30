@@ -6,8 +6,11 @@ import { useChatStore } from "../store/chatStore";
 import { API_FRONTEND_ENDPOINTS } from "@/lib/frontend/endpoints";
 import { safeFrontendFetch } from "@/lib/utils/safeFrontendFetch";
 
+const selectPending = (s: any) => s.pending;
+
 export function usePendingChats() {
-  const setPending = useChatStore((s) => s.setPending);
+  // setter NO reactivo
+  const setPending = useChatStore.getState().setPending;
 
   async function fetchPending() {
     const result = await safeFrontendFetch(
@@ -23,8 +26,7 @@ export function usePendingChats() {
     fetchPending();
   }, []);
 
-  return {
-    pending: useChatStore((s) => s.pending),
-    refresh: fetchPending,
-  };
+  const pending = useChatStore(selectPending);
+
+  return { pending, refresh: fetchPending };
 }

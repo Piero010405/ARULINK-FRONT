@@ -5,8 +5,8 @@ import { useChatStore } from "../store/chatStore";
 import { safeFrontendFetch } from "@/lib/utils/safeFrontendFetch";
 
 export function useAssignChat() {
-  const removeFromPending = useChatStore(s => s.removeFromPending);
-  const addToAssigned = useChatStore(s => s.addToAssigned);
+  const removeFromPending = useChatStore.getState().removeFromPending;
+  const addToAssigned = useChatStore.getState().addToAssigned;
 
   async function assign(interactionId?: string, item?: any) {
     if (!interactionId) throw new Error("Missing interaction id");
