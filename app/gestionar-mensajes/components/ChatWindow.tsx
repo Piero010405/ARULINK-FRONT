@@ -177,7 +177,7 @@ export default function ChatWindow({
                       : "bg-gray-200 text-gray-900"
                   }`}
                 >
-                  <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                  <p className="whitespace-pre-wrap wrap-break-word">{m.body}</p>
 
                   <div className="flex items-center gap-1 text-[10px] mt-1 opacity-70 justify-end">
                     {new Date(m.timestamp).toLocaleTimeString("es-PE", {
