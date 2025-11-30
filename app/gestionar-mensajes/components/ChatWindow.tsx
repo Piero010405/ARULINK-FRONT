@@ -8,8 +8,8 @@ interface Props {
   chatName: string;
   messages: Message[];
   summary?: string;
-  sendToChatId: string;      // WhatsApp chat_id
-  interactionId?: string;    // not used here but kept for future updates
+  sendToChatId: string;
+  interactionId?: string;
 }
 
 export default function ChatWindow({
@@ -22,23 +22,22 @@ export default function ChatWindow({
   const listRef = useRef<HTMLDivElement | null>(null);
   const { send } = useSendMessage();
 
-  // Ordenar mensajes ASC → más antiguos arriba
   const sortedMessages = [...messages].sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
 
-  // Auto-scroll: cada vez que lleguen mensajes nuevos → bajar al final
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+    listRef.current?.scrollTo({
+      top: listRef.current.scrollHeight,
+      behavior: "smooth",
+    });
   }, [sortedMessages]);
 
   const handleSend = async () => {
     if (!sendToChatId) return;
     if (!newMessage.trim()) return;
 
-    // MVP: APENAS string
     await send(sendToChatId, newMessage.trim());
-
     setNewMessage("");
   };
 
@@ -57,22 +56,24 @@ export default function ChatWindow({
 
   return (
     <section className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
-      {/* HEADER DEL CHAT */}
       <div className="bg-white border-b p-4">
         <h2 className="font-semibold">{chatName}</h2>
         {summary && <p className="text-xs text-gray-500">{summary}</p>}
       </div>
 
-      {/* LISTA DE MENSAJES */}
       <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {sortedMessages.map((m) => (
           <div
             key={m.id}
-            className={`flex ${m.from_me ? "justify-end" : "justify-start"}`}
+            className={`flex ${
+              m.from_me ? "justify-end" : "justify-start"
+            }`}
           >
             <div
               className={`${
-                m.from_me ? "bg-red-700 text-white" : "bg-gray-200 text-gray-900"
+                m.from_me
+                  ? "bg-red-700 text-white"
+                  : "bg-gray-200 text-gray-900"
               } px-4 py-2 rounded-2xl max-w-[70%]`}
             >
               {m.body}
@@ -84,7 +85,6 @@ export default function ChatWindow({
         ))}
       </div>
 
-      {/* INPUT PARA ENVIAR */}
       <div className="bg-white border-t p-4">
         <div className="flex gap-3 items-center">
           <input

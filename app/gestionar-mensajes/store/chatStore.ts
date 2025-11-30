@@ -9,6 +9,32 @@ import {
   AssignedStreamMessage,
 } from "@/types/chats";
 
+// ============================
+// 🔥 Normalizador de IDs
+// ============================
+const ensureUniqueId = (
+  rawId: any,
+  timestamp: string | number | undefined
+) => {
+  const idStr = String(rawId);
+
+  // Detecta IDs corruptos o falsy → genera ID nuevo robusto
+  if (
+    !rawId ||
+    idStr.includes("false") ||
+    idStr.includes("undefined") ||
+    idStr.includes("null") ||
+    idStr.includes("NaN")
+  ) {
+    return `gen_${timestamp ?? Date.now()}_${crypto.randomUUID()}`;
+  }
+
+  return idStr;
+};
+
+// ============================
+// Tipos
+// ============================
 export interface ChatMeta {
   chat_id: string;
   interaction_id?: string;
@@ -26,9 +52,6 @@ export interface ChatNotification {
 }
 
 interface ChatState {
-  // ==========================
-  // OVERVIEW
-  // ==========================
   pending: ChatOverviewItem[];
   assigned: ChatOverviewItem[];
 
@@ -39,9 +62,6 @@ interface ChatState {
   addToAssigned: (item: ChatOverviewItem) => void;
   upsertOverviewItem: (item: ChatOverviewItem) => void;
 
-  // ==========================
-  // CHATS
-  // ==========================
   chats: Record<string, Message[]>;
   meta: Record<string, ChatMeta>;
 
@@ -50,35 +70,26 @@ interface ChatState {
   updateMessageInChat: (key: string, id: string, patch: Partial<Message>) => void;
   removeMessageFromChat: (key: string, id: string) => void;
 
-  // ==========================
-  // DEDUP
-  // ==========================
   processedMessageIds: Set<string>;
 
-  // ==========================
-  // BACKEND STATUS
-  // ==========================
   isBackendOnline: boolean;
   setBackendOnline: (v: boolean) => void;
 
-  // ==========================
-  // STREAM (SSE)
-  // ==========================
   applyStreamMessage: (msg: AssignedStreamMessage) => void;
 
-  // ==========================
-  // NOTIFICATIONS
-  // ==========================
   notifications: ChatNotification[];
   addNotification: (n: ChatNotification) => void;
   removeNotification: (id: string) => void;
 }
 
+// ============================
+// STORE COMPLETO
+// ============================
 export const useChatStore = create<ChatState>((set, get) => ({
 
-  // ====================================================
+  // ========================
   // OVERVIEW
-  // ====================================================
+  // ========================
   pending: [],
   assigned: [],
   processedMessageIds: new Set(),
@@ -111,21 +122,26 @@ export const useChatStore = create<ChatState>((set, get) => ({
         : { assigned: [...s.assigned, item] };
     }),
 
-  // ====================================================
+  // ========================
   // CHATS + META
-  // ====================================================
+  // ========================
   chats: {},
   meta: {},
 
   setChatMessages: (key, resp) =>
     set((s) => {
-      const messages = resp.messages.map((m) => ({
-        ...m,
-        timestamp:
+      const messages = resp.messages.map((m) => {
+        const ts =
           typeof m.timestamp === "number"
             ? new Date(m.timestamp * 1000).toISOString()
-            : m.timestamp,
-      }));
+            : m.timestamp;
+
+        return {
+          ...m,
+          id: ensureUniqueId(m.id, ts),
+          timestamp: ts,
+        };
+      });
 
       const ids = messages.map((m) => m.id);
       const processedSet = new Set([...s.processedMessageIds, ...ids]);
@@ -151,19 +167,23 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   addMessageToChat: (key, message) =>
     set((s) => {
-      const msgId = message.id;
-      if (s.processedMessageIds.has(msgId)) return {};
+      const finalTimestamp =
+        typeof message.timestamp === "number"
+          ? new Date(message.timestamp * 1000).toISOString()
+          : message.timestamp ?? new Date().toISOString();
+
+      const finalId = ensureUniqueId(message.id, finalTimestamp);
+
+      if (s.processedMessageIds.has(finalId)) return {}; // No duplicar
 
       const normalized: Message = {
         ...message,
-        timestamp:
-          typeof message.timestamp === "number"
-            ? new Date(message.timestamp * 1000).toISOString()
-            : message.timestamp,
+        id: finalId,
+        timestamp: finalTimestamp,
       };
 
       return {
-        processedMessageIds: new Set([...s.processedMessageIds, msgId]),
+        processedMessageIds: new Set([...s.processedMessageIds, finalId]),
         chats: {
           ...s.chats,
           [key]: [...(s.chats[key] ?? []), normalized],
@@ -172,14 +192,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }),
 
   updateMessageInChat: (key, id, patch) =>
-    set((s) => ({
-      chats: {
-        ...s.chats,
-        [key]: (s.chats[key] ?? []).map((m) =>
-          m.id === id ? { ...m, ...patch } : m
-        ),
-      },
-    })),
+    set((s) => {
+      const finalId = ensureUniqueId(id, Date.now());
+
+      return {
+        chats: {
+          ...s.chats,
+          [key]: (s.chats[key] ?? []).map((m) =>
+            m.id === id ? { ...m, ...patch, id: finalId } : m
+          ),
+        },
+      };
+    }),
 
   removeMessageFromChat: (key, id) =>
     set((s) => ({
@@ -189,27 +213,30 @@ export const useChatStore = create<ChatState>((set, get) => ({
       },
     })),
 
-  // ====================================================
-  // BACKEND ONLINE / OFFLINE
-  // ====================================================
+  // ========================
+  // BACKEND STATUS
+  // ========================
   isBackendOnline: true,
   setBackendOnline: (v) => set({ isBackendOnline: v }),
 
-  // ====================================================
-  // STREAM (solo overview)
-  // ====================================================
+  // ========================
+  // STREAM → solo overview
+  // ========================
   applyStreamMessage: (msg) => {
     const id = msg.interaction_id;
     if (!id) return;
+
+    const finalTs = new Date(msg.timestamp * 1000).toISOString();
+    const finalId = ensureUniqueId(msg.timestamp?.toString(), finalTs);
 
     get().upsertOverviewItem({
       id: msg.chat_id ?? id,
       name: msg.from ?? "Usuario",
       interaction_id: id,
       last_message: {
-        id: msg.timestamp.toString(),
+        id: finalId,
         body: msg.body,
-        timestamp: new Date(msg.timestamp * 1000).toISOString(),
+        timestamp: finalTs,
         from_me: msg.from_me,
         ack: 0,
         type: "text",
@@ -218,7 +245,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       type: "individual",
       archived: false,
       pinned: false,
-      timestamp: new Date(msg.timestamp * 1000).toISOString(),
+      timestamp: finalTs,
       summary: null,
       picture_url: null,
     });
@@ -230,9 +257,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
   },
 
-  // ====================================================
+  // ========================
   // NOTIFICATIONS
-  // ====================================================
+  // ========================
   notifications: [],
 
   addNotification: (n) =>
