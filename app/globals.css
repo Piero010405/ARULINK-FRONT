@@ -117,6 +117,17 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Oculta scrollbar en Chrome, Edge, Safari */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Oculta scrollbar en Firefox */
+.scrollbar-hide {
+  scrollbar-width: none;
+}
+
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

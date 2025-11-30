@@ -46,20 +46,14 @@ function formatDateSeparator(date: Date) {
 //    TICKS WHATSAPP
 // =========================
 function AckIcon({ ack }: { ack?: any }) {
-  const value = typeof ack === "string" ? ack : ack ?? 0;
+  const v = typeof ack === "string" ? ack : ack ?? 0;
 
-  if (value === 0 || value === "PENDING") {
-    return <span className="text-[10px] opacity-70">⏳</span>;
-  }
-  if (value === 1 || value === "SERVER") {
-    return <span className="text-[10px] opacity-70">✓</span>;
-  }
-  if (value === 2 || value === "DEVICE") {
-    return <span className="text-[10px] opacity-70">✓✓</span>;
-  }
-  if (value === 3 || value === "READ") {
+  if (v === 0 || v === "PENDING") return <span className="text-[10px]">⏳</span>;
+  if (v === 1 || v === "SERVER") return <span className="text-[10px]">✓</span>;
+  if (v === 2 || v === "DEVICE") return <span className="text-[10px]">✓✓</span>;
+  if (v === 3 || v === "READ")
     return <span className="text-[10px] text-blue-500">✓✓</span>;
-  }
+
   return null;
 }
 
@@ -70,30 +64,36 @@ interface Props {
   summary?: string;
 }
 
-export default function ChatWindow({ chatName, chatId, interactionId, summary }: Props) {
+export default function ChatWindow({
+  chatName,
+  chatId,
+  interactionId,
+  summary,
+}: Props) {
   const [newMessage, setNewMessage] = useState("");
   const listRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const { send } = useSendMessage();
 
-  // selector memoizado por interacción
+  // Selector memoizado
   const selectMessages = useMemo(
     () => (s: any) => s.chats[interactionId] ?? EMPTY,
     [interactionId]
   );
-
   const messages = useChatStore(selectMessages);
 
-  // ordenar mensajes por timestamp
-  const sorted = useMemo(() => {
-    return [...messages].sort(
-      (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
-  }, [messages]);
+  // Ordenar mensajes
+  const sorted = useMemo(
+    () =>
+      [...messages].sort(
+        (a, b) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      ),
+    [messages]
+  );
 
-  // autoscroll
+  // Scroll automático
   useEffect(() => {
     listRef.current?.scrollTo({
       top: listRef.current.scrollHeight,
@@ -101,27 +101,36 @@ export default function ChatWindow({ chatName, chatId, interactionId, summary }:
     });
   }, [sorted]);
 
-  // autosize del textarea
-  const handleInput = () => {
-    if (textareaRef.current) {
+  // Cuando se limpia el input → resetear altura
+  useEffect(() => {
+    if (newMessage === "" && textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
     }
-  };
+  }, [newMessage]);
 
-  // enviar mensaje
-  const handleSend = async () => {
-    if (!newMessage.trim()) return;
+  // =========================
+  //   ENVÍO DEL MENSAJE
+  // =========================
+  const handleSend = () => {
+    const text = newMessage.trim();
+    if (!text) return;
 
-    await send(chatId, interactionId, newMessage.trim());
+    // ⏳ OPTIMISTIC inmediatamente
+    send(chatId, interactionId, text);
 
+    // limpiar input al instante
     setNewMessage("");
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
+
+    // reset del textarea en el próximo frame
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.value = "";
+        textareaRef.current.style.height = "auto";
+      }
+    });
   };
 
-  // enter = enviar
+  // Enter = enviar, Shift+Enter = salto de línea
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -129,34 +138,26 @@ export default function ChatWindow({ chatName, chatId, interactionId, summary }:
     }
   };
 
-  // =========================
-  // AGRUPAR POR FECHAS
-  // =========================
+  // agrupador de fechas
   let lastDate = "";
 
   return (
     <section className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
-
       {/* HEADER */}
       <div className="bg-white border-b p-4">
         <h2 className="font-semibold">{chatName}</h2>
         {summary && <p className="text-xs text-gray-500">{summary}</p>}
       </div>
 
-      {/* LISTA DE MENSAJES */}
-      <div
-        ref={listRef}
-        className="flex-1 overflow-y-auto p-4 space-y-6"
-      >
+      {/* MENSAJES */}
+      <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-6">
         {sorted.map((m) => {
           const msgDate = formatDateSeparator(new Date(m.timestamp));
-
           const showDate = msgDate !== lastDate;
           lastDate = msgDate;
 
           return (
             <div key={m.id} className="space-y-2">
-              {/* SEPARADOR DE FECHA */}
               {showDate && (
                 <div className="flex justify-center">
                   <span className="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded-full">
@@ -165,21 +166,18 @@ export default function ChatWindow({ chatName, chatId, interactionId, summary }:
                 </div>
               )}
 
-              {/* BURBUJA DE MENSAJE */}
+              {/* BURBUJA */}
               <div
-                className={`flex ${
-                  m.from_me ? "justify-end" : "justify-start"
-                }`}
+                className={`flex ${m.from_me ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`px-4 py-2 rounded-2xl max-w-[70%] shadow-sm
-                    ${
-                      m.from_me
-                        ? "bg-red-700 text-white"
-                        : "bg-gray-200 text-gray-900"
-                    }`}
+                  className={`px-4 py-2 rounded-2xl max-w-[70%] shadow-sm ${
+                    m.from_me
+                      ? "bg-red-700 text-white"
+                      : "bg-gray-200 text-gray-900"
+                  }`}
                 >
-                  <p className="whitespace-pre-wrap wrap-break-word">{m.body}</p>
+                  <p className="whitespace-pre-wrap break-words">{m.body}</p>
 
                   <div className="flex items-center gap-1 text-[10px] mt-1 opacity-70 justify-end">
                     {new Date(m.timestamp).toLocaleTimeString("es-PE", {
@@ -187,7 +185,6 @@ export default function ChatWindow({ chatName, chatId, interactionId, summary }:
                       minute: "2-digit",
                       hour12: true,
                     })}
-
                     {m.from_me && <AckIcon ack={m.ack} />}
                   </div>
                 </div>
@@ -205,10 +202,11 @@ export default function ChatWindow({ chatName, chatId, interactionId, summary }:
             value={newMessage}
             onChange={(e) => {
               setNewMessage(e.target.value);
-              handleInput();
+              e.target.style.height = "auto";
+              e.target.style.height = `${e.target.scrollHeight}px`;
             }}
             onKeyDown={handleKeyDown}
-            className="flex-1 px-4 py-2 rounded-2xl border resize-none max-h-40 overflow-y-auto"
+            className="flex-1 px-4 py-2 rounded-full border resize-none overflow-hidden focus:outline-none"
             placeholder="Escribe un mensaje..."
             rows={1}
           />
