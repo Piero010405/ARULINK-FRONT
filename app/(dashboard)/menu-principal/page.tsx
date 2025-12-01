@@ -1,40 +1,58 @@
-"use client"
+"use client";
 
-// import { useAuth } from "@/hooks/useAuth"
-// import { useRouter } from "next/navigation"
-// import Header from "@/components/header"
-import { redirect } from "next/navigation"
+import { usePendingChats } from "@/app/gestionar-mensajes/hooks/usePendingChats";
+import { useAssignedChats } from "@/app/gestionar-mensajes/hooks/useAssignedChats";
+import DashboardKPI from "@/components/dashboard/DashboardKPI";
+import DashboardChart from "@/components/dashboard/DashboardChart";
+import DashboardColumn from "@/components/dashboard/DashboardColumn";
+import PendingChatsList from "@/components/dashboard/PendingChatsList";
+import AssignedChatsList from "@/components/dashboard/AssignedChatsList";
+import { ChatOverviewItem } from "@/types/chats";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function MenuPrincipal() {
-  redirect("/gestionar-mensajes");
-  // const { user } = useAuth()
+  const { pending } = usePendingChats();
+  const { assigned } = useAssignedChats();
+  const { user } = useAuth();
 
-  // const router = useRouter()
+  const activosHoy = assigned.filter((c: ChatOverviewItem) => c.timestamp !== null).length;
 
-  // return (
-  //   <div className="min-h-screen flex flex-col bg-white">
-  //     {/* Header */}
-  //     <Header />
+  return (
+    <div className="min-h-screen bg-gray-100 p-10 flex flex-col gap-10">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <p className="text-gray-600 mt-1">Bienvenido, {user?.full_name ?? "Usuario"} 👋</p>
+      </div>
 
-  //     {/* Main content */}
-  //     <main className="flex flex-col items-center justify-center grow text-center py-16">
-  //       <h2 className="text-3xl font-bold text-red-700 mb-12">Bienvenido {user?.full_name}</h2>
+      {/* KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <DashboardKPI label="Pendientes" value={pending.length} />
+        <DashboardKPI label="Asignados" value={assigned.length} />
+        <DashboardKPI label="Activos Hoy" value={activosHoy} />
+      </div>
 
-  //       <div className="flex flex-col md:flex-row gap-10">
-  //         <button
-  //           onClick={() => router.push("/gestionar-mensajes")}
-  //           className="bg-gray-500 text-white font-medium px-8 py-4 rounded-2xl hover:bg-gray-600 transition"
-  //         >
-  //           Gestionar mensajes
-  //         </button>
-  //         <button
-  //           onClick={() => router.push("/dashboard")}
-  //           className="bg-gray-500 text-white font-medium px-8 py-4 rounded-2xl hover:bg-gray-600 transition"
-  //         >
-  //           Visualizar Dashboard
-  //         </button>
-  //       </div>
-  //     </main>
-  //   </div>
-  // )
+      {/* Sección principal */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+
+        {/* Gráfica */}
+        <DashboardChart
+          pending={pending.length}
+          assigned={assigned.length}
+          activos={activosHoy}
+        />
+
+        {/* Pendientes */}
+        <DashboardColumn title="Pendientes por asignar">
+          <PendingChatsList pending={pending} />
+        </DashboardColumn>
+
+        {/* Asignados */}
+        <DashboardColumn title="Chats asignados recientes">
+          <AssignedChatsList assigned={assigned} />
+        </DashboardColumn>
+
+      </div>
+    </div>
+  );
 }

@@ -2,23 +2,19 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import ChatHeader from "./components/ChatHeader";
-import ChatsSidebar from "./components/ChatsSidebar";
-import ChatWindow from "./components/ChatWindow";
-import { usePendingChats } from "./hooks/usePendingChats";
+import ChatsSidebar from "../../components/components/ChatsSidebar";
+import ChatWindow from "../../components/components/ChatWindow";
 import { useAssignedChats } from "./hooks/useAssignedChats";
 import { useChatMessages } from "./hooks/useChatMessages";
 import { useChatStreams } from "./hooks/useChatStreams";
-import { PendingChatsPanel } from "./components/PendingChatsPanel";
 import { useAssignedStream } from "./hooks/useAssignedStream";
-import { FloatingNotifications } from "./components/FloatingNotifications";
+import { FloatingNotifications } from "../../components/components/FloatingNotifications";
 import { ChatOverviewItem } from "@/types/chats";
 
 export default function GestionarMensajes() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  const { pending } = usePendingChats();
   const { assigned } = useAssignedChats();
 
   const selected: ChatOverviewItem | null = useMemo(
@@ -39,12 +35,6 @@ export default function GestionarMensajes() {
     <div className="h-full w-full">
       <FloatingNotifications />
       <div className="h-screen w-screen flex flex-col overflow-hidden">
-        <ChatHeader />
-
-        <div className="bg-white border-b px-4 py-2">
-          <PendingChatsPanel pending={pending} />
-        </div>
-
         <main className="flex grow bg-gray-100 overflow-hidden">
           <ChatsSidebar
             selected={selectedChatId}

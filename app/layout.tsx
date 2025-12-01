@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/context/AuthProvider'
 import BackendStatusBanner from '@/components/BackendStatusBanner'
 import './globals.css'
+import ChatHeader from '@/components/components/ChatHeader'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body className={`font-sans antialiased`}>
         <AuthProvider>
            {/* Banner global de status backend */}
+          <ChatHeader />
           <BackendStatusBanner />
           {children}
         </AuthProvider>
