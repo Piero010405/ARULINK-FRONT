@@ -32,9 +32,9 @@ export default function GestionarMensajes() {
   useAssignedStream();
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full overflow-hidden">
       <FloatingNotifications />
-      <div className="h-screen w-screen flex flex-col overflow-hidden">
+      <div className="flex flex-col h-[calc(100vh-64px)]"> 
         <main className="flex grow bg-gray-100 overflow-hidden">
           <ChatsSidebar
             selected={selectedChatId}
