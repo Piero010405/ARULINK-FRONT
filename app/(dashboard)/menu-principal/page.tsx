@@ -1,7 +1,7 @@
 "use client";
 
-import { usePendingChats } from "@/app/gestionar-mensajes/hooks/usePendingChats";
-import { useAssignedChats } from "@/app/gestionar-mensajes/hooks/useAssignedChats";
+import { usePendingChats } from "@/app/(dashboard)/gestionar-mensajes/hooks/usePendingChats";
+import { useAssignedChats } from "@/app/(dashboard)/gestionar-mensajes/hooks/useAssignedChats";
 import DashboardKPI from "@/components/dashboard/DashboardKPI";
 import DashboardChart from "@/components/dashboard/DashboardChart";
 import DashboardColumn from "@/components/dashboard/DashboardColumn";

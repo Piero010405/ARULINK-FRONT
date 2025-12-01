@@ -1,7 +1,7 @@
 // app/gestionar-mensajes/components/FloatingNotifications.tsx
 "use client";
 
-import { useChatStore } from "../../app/gestionar-mensajes/store/chatStore";
+import { useChatStore } from "../../app/(dashboard)/gestionar-mensajes/store/chatStore";
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle } from "lucide-react";

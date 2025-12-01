@@ -1,7 +1,7 @@
 // components/BackendStatusBanner.tsx
 "use client";
 
-import { useChatStore } from "@/app/gestionar-mensajes/store/chatStore";
+import { useChatStore } from "@/app/(dashboard)/gestionar-mensajes/store/chatStore";
 import { useEffect, useState } from "react";
 
 export default function BackendStatusBanner() {

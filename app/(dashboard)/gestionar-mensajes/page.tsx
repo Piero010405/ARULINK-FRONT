@@ -2,13 +2,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import ChatsSidebar from "../../components/components/ChatsSidebar";
-import ChatWindow from "../../components/components/ChatWindow";
+import ChatsSidebar from "../../../components/components/ChatsSidebar";
+import ChatWindow from "../../../components/components/ChatWindow";
 import { useAssignedChats } from "./hooks/useAssignedChats";
 import { useChatMessages } from "./hooks/useChatMessages";
 import { useChatStreams } from "./hooks/useChatStreams";
 import { useAssignedStream } from "./hooks/useAssignedStream";
-import { FloatingNotifications } from "../../components/components/FloatingNotifications";
+import { FloatingNotifications } from "../../../components/components/FloatingNotifications";
 import { ChatOverviewItem } from "@/types/chats";
 
 export default function GestionarMensajes() {

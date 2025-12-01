@@ -2,7 +2,7 @@
 
 import { ChatOverviewItem } from "@/types/chats";
 import { User, ChevronRight } from "lucide-react";
-import { useAssignChat } from "@/app/gestionar-mensajes/hooks/useAssignChat";
+import { useAssignChat } from "@/app/(dashboard)/gestionar-mensajes/hooks/useAssignChat";
 
 export default function PendingChatCard({ chat }: { chat: ChatOverviewItem }) {
   const { assign } = useAssignChat();

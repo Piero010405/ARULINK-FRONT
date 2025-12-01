@@ -1,7 +1,7 @@
 // src/lib/utils/sseClient.ts
 "use client";
 
-import { useChatStore } from "@/app/gestionar-mensajes/store/chatStore";
+import { useChatStore } from "@/app/(dashboard)/gestionar-mensajes/store/chatStore";
 
 type SSEOptions = {
   onMessage: (ev: MessageEvent) => void;

@@ -2,8 +2,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { useChatStore } from "../../app/gestionar-mensajes/store/chatStore";
-import { useSendMessage } from "../../app/gestionar-mensajes/hooks/useSendMessage";
+import { useChatStore } from "../../app/(dashboard)/gestionar-mensajes/store/chatStore";
+import { useSendMessage } from "../../app/(dashboard)/gestionar-mensajes/hooks/useSendMessage";
 import type { Message } from "@/types/chats";
 
 // lista vacía estable

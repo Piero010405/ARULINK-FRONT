@@ -3,7 +3,7 @@
 
 import { ChatOverviewItem } from "@/types/chats";
 import { User, ChevronRight, MessageSquare } from "lucide-react";
-import { useAssignChat } from "@/app/gestionar-mensajes/hooks/useAssignChat";
+import { useAssignChat } from "@/app/(dashboard)/gestionar-mensajes/hooks/useAssignChat";
 
 interface Props {
   pending: ChatOverviewItem[];
