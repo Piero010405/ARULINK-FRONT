@@ -1,10 +1,11 @@
+// app/layout.tsx
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/context/AuthProvider'
 import BackendStatusBanner from '@/components/BackendStatusBanner'
 import './globals.css'
-import ChatHeader from '@/components/components/ChatHeader'
+import Header from '@/components/header'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -42,7 +43,7 @@ export default function RootLayout({
       <body className={`font-sans antialiased`}>
         <AuthProvider>
            {/* Banner global de status backend */}
-          <ChatHeader />
+          <Header />
           <BackendStatusBanner />
           {children}
         </AuthProvider>
